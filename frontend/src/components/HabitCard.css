@@ -1,0 +1,87 @@
+.habit-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border-left: 4px solid;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.habit-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.habit-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  margin-bottom: 0.5rem;
+}
+
+.habit-card-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.delete-btn {
+  background: transparent;
+  color: #dc2626;
+  font-size: 1.5rem;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-btn:hover {
+  background: #fee2e2;
+}
+
+.habit-description {
+  color: #666;
+  font-size: 0.9rem;
+  margin: 0.5rem 0 1rem 0;
+  line-height: 1.4;
+}
+
+.habit-meta {
+  margin-bottom: 1rem;
+}
+
+.frequency-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: #e0e7ff;
+  color: #4f46e5;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.track-btn {
+  width: 100%;
+  padding: 0.75rem;
+  background: #f3f4f6;
+  color: #6b7280;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.track-btn:hover {
+  background: #e5e7eb;
+}
+
+.track-btn.completed {
+  background: #10b981;
+  color: white;
+}
+
+.track-btn.completed:hover {
+  background: #059669;
+}

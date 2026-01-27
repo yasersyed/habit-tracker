@@ -1,0 +1,54 @@
+.user-selector {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.user-selector-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.user-selector-header label {
+  font-weight: 600;
+  color: #333;
+}
+
+.user-selector-header select {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 14px;
+  background: white;
+  cursor: pointer;
+  min-width: 150px;
+}
+
+.user-selector-header button {
+  background: #3b82f6;
+  color: white;
+}
+
+.create-user-form {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.create-user-form input {
+  flex: 1;
+  min-width: 200px;
+  margin-bottom: 0;
+}
+
+.create-user-form button {
+  background: #10b981;
+  color: white;
+}
