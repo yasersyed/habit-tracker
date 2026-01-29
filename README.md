@@ -1,30 +1,34 @@
 # Habit Tracker Application
 
-A full-stack habit tracking application built with Node.js, Express, MongoDB, and React.
+A full-stack habit tracking application built with Node.js, Express, MongoDB, and React, featuring JWT-based authentication.
 
 ## Project Structure
 
 ```
 habit-tracker/
-├── backend/           # Node.js/Express API
-│   ├── config/        # Database configuration
-│   ├── models/        # Mongoose models
-│   ├── routes/        # API routes
-│   └── server.js      # Main server file
-└── frontend/          # React application
+├── backend/              # Node.js/Express API
+│   ├── config/           # Database configuration
+│   ├── middleware/       # Auth middleware
+│   ├── models/           # Mongoose models
+│   ├── routes/           # API routes
+│   └── server.js         # Main server file
+└── frontend/             # React application
     └── src/
-        ├── components/    # React components
-        ├── services/      # API services
-        └── App.jsx        # Main app component
+        ├── components/   # React components
+        ├── context/      # Auth context
+        ├── services/     # API services
+        └── App.jsx       # Main app component
 ```
 
 ## Features
 
-- User management (create, select users)
+- User authentication (signup, login, logout)
+- JWT-based session management
 - Create and manage habits with customizable colors and frequencies
 - Track habits daily
 - View habit completion status
 - Delete habits
+- Protected routes - all habit data is user-specific
 
 ## Prerequisites
 
@@ -73,10 +77,12 @@ npm install
 cp .env.example .env
 ```
 
-4. Update the `.env` file with your MongoDB connection string:
+4. Update the `.env` file with your configuration:
 ```
 MONGODB_URI=mongodb://localhost:27017/habit_tracker
 PORT=5000
+JWT_SECRET=your-secret-key-change-in-production
+JWT_EXPIRES_IN=7d
 ```
 
 5. Start the backend server:
@@ -103,7 +109,7 @@ npm install
 npm run dev
 ```
 
-The frontend will run on http://localhost:3000
+The frontend will run on http://localhost:5173
 
 ## Testing
 
@@ -141,40 +147,49 @@ For more details, see [backend/__tests__/README.md](backend/__tests__/README.md)
 
 ## API Endpoints
 
-### Users
-- `GET /api/users` - Get all users
-- `GET /api/users/:id` - Get user by ID
-- `POST /api/users` - Create new user
-- `PUT /api/users/:id` - Update user
-- `DELETE /api/users/:id` - Delete user
+### Authentication
+- `POST /api/auth/register` - Register a new user
+- `POST /api/auth/login` - Login with email and password
+- `GET /api/auth/me` - Get current authenticated user
 
-### Habits
-- `GET /api/habits/user/:userId` - Get all habits for a user
+### Users (Protected)
+- `GET /api/users/me` - Get current user's profile
+- `PUT /api/users/me` - Update current user's profile
+
+### Habits (Protected)
+- `GET /api/habits` - Get all habits for authenticated user
 - `GET /api/habits/:id` - Get habit by ID
 - `POST /api/habits` - Create new habit
 - `PUT /api/habits/:id` - Update habit
 - `DELETE /api/habits/:id` - Delete habit
 
-### Habit Records
+### Habit Records (Protected)
+- `GET /api/records` - Get all records for authenticated user
 - `GET /api/records/habit/:habitId` - Get all records for a habit
-- `GET /api/records/user/:userId` - Get all records for a user
-- `GET /api/records/user/:userId/range?startDate=&endDate=` - Get records for date range
+- `GET /api/records/range?startDate=&endDate=` - Get records for date range
 - `POST /api/records` - Create or update habit record
 - `DELETE /api/records/:id` - Delete habit record
 
+All protected routes require a valid JWT token in the Authorization header:
+```
+Authorization: Bearer <token>
+```
+
 ## Usage
 
-1. Create a user or select an existing one
+1. Sign up for a new account or login with existing credentials
 2. Click "Add Habit" to create a new habit
 3. Fill in the habit details (name, description, frequency, color)
 4. Click on "Mark as Complete" to track your habit for today
 5. Completed habits will show a checkmark
+6. Click "Logout" to end your session
 
 ## Data Models
 
 ### User
-- username (unique)
+- username (unique, min 3 characters)
 - email (unique)
+- password (hashed, min 6 characters)
 - createdAt
 
 ### Habit
@@ -192,3 +207,10 @@ For more details, see [backend/__tests__/README.md](backend/__tests__/README.md)
 - completed (boolean)
 - notes
 - createdAt
+
+## Security
+
+- Passwords are hashed using bcrypt before storage
+- JWT tokens expire after 7 days by default
+- All habit and record endpoints are protected
+- Users can only access their own data

@@ -1,22 +1,28 @@
 import express from 'express';
 import HabitRecord from '../models/HabitRecord.js';
+import authMiddleware from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Get all records for a habit
+router.use(authMiddleware);
+
+// Get all records for a habit (verify ownership)
 router.get('/habit/:habitId', async (req, res) => {
   try {
-    const records = await HabitRecord.find({ habitId: req.params.habitId }).sort({ date: -1 });
+    const records = await HabitRecord.find({
+      habitId: req.params.habitId,
+      userId: req.user._id
+    }).sort({ date: -1 });
     res.json(records);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
-// Get all records for a user
-router.get('/user/:userId', async (req, res) => {
+// Get all records for authenticated user
+router.get('/', async (req, res) => {
   try {
-    const records = await HabitRecord.find({ userId: req.params.userId })
+    const records = await HabitRecord.find({ userId: req.user._id })
       .populate('habitId')
       .sort({ date: -1 });
     res.json(records);
@@ -26,11 +32,11 @@ router.get('/user/:userId', async (req, res) => {
 });
 
 // Get records for a specific date range
-router.get('/user/:userId/range', async (req, res) => {
+router.get('/range', async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
     const records = await HabitRecord.find({
-      userId: req.params.userId,
+      userId: req.user._id,
       date: {
         $gte: new Date(startDate),
         $lte: new Date(endDate)
@@ -42,31 +48,28 @@ router.get('/user/:userId/range', async (req, res) => {
   }
 });
 
-// Create or update habit record (track habit for a day)
+// Create or update habit record
 router.post('/', async (req, res) => {
   try {
-    const { habitId, userId, date, completed, notes } = req.body;
+    const { habitId, date, completed, notes } = req.body;
 
-    // Normalize date to midnight UTC
     const recordDate = new Date(date);
     recordDate.setUTCHours(0, 0, 0, 0);
 
-    // Try to find existing record for this habit and date
     let record = await HabitRecord.findOne({
       habitId,
+      userId: req.user._id,
       date: recordDate
     });
 
     if (record) {
-      // Update existing record
       record.completed = completed !== undefined ? completed : record.completed;
       record.notes = notes !== undefined ? notes : record.notes;
       await record.save();
     } else {
-      // Create new record
       record = new HabitRecord({
         habitId,
-        userId,
+        userId: req.user._id,
         date: recordDate,
         completed,
         notes
@@ -80,10 +83,13 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Delete habit record
+// Delete habit record (verify ownership)
 router.delete('/:id', async (req, res) => {
   try {
-    const record = await HabitRecord.findById(req.params.id);
+    const record = await HabitRecord.findOne({
+      _id: req.params.id,
+      userId: req.user._id
+    });
     if (!record) {
       return res.status(404).json({ message: 'Record not found' });
     }
