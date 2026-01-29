@@ -1,22 +1,28 @@
 import express from 'express';
 import Habit from '../models/Habit.js';
+import authMiddleware from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Get all habits for a user
-router.get('/user/:userId', async (req, res) => {
+router.use(authMiddleware);
+
+// Get all habits for authenticated user
+router.get('/', async (req, res) => {
   try {
-    const habits = await Habit.find({ userId: req.params.userId });
+    const habits = await Habit.find({ userId: req.user._id });
     res.json(habits);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
-// Get habit by ID
+// Get habit by ID (verify ownership)
 router.get('/:id', async (req, res) => {
   try {
-    const habit = await Habit.findById(req.params.id);
+    const habit = await Habit.findOne({
+      _id: req.params.id,
+      userId: req.user._id
+    });
     if (!habit) {
       return res.status(404).json({ message: 'Habit not found' });
     }
@@ -29,7 +35,7 @@ router.get('/:id', async (req, res) => {
 // Create new habit
 router.post('/', async (req, res) => {
   const habit = new Habit({
-    userId: req.body.userId,
+    userId: req.user._id,
     name: req.body.name,
     description: req.body.description,
     frequency: req.body.frequency,
@@ -44,10 +50,13 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update habit
+// Update habit (verify ownership)
 router.put('/:id', async (req, res) => {
   try {
-    const habit = await Habit.findById(req.params.id);
+    const habit = await Habit.findOne({
+      _id: req.params.id,
+      userId: req.user._id
+    });
     if (!habit) {
       return res.status(404).json({ message: 'Habit not found' });
     }
@@ -64,10 +73,13 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Delete habit
+// Delete habit (verify ownership)
 router.delete('/:id', async (req, res) => {
   try {
-    const habit = await Habit.findById(req.params.id);
+    const habit = await Habit.findOne({
+      _id: req.params.id,
+      userId: req.user._id
+    });
     if (!habit) {
       return res.status(404).json({ message: 'Habit not found' });
     }

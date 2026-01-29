@@ -2,30 +2,57 @@ import axios from 'axios';
 
 const API_URL = '/api';
 
+const api = axios.create({
+  baseURL: API_URL
+});
+
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+// Auth API
+export const authAPI = {
+  login: (data) => api.post('/auth/login', data),
+  register: (data) => api.post('/auth/register', data),
+  me: () => api.get('/auth/me')
+};
+
 // User API
 export const userAPI = {
-  getAll: () => axios.get(`${API_URL}/users`),
-  getById: (id) => axios.get(`${API_URL}/users/${id}`),
-  create: (data) => axios.post(`${API_URL}/users`, data),
-  update: (id, data) => axios.put(`${API_URL}/users/${id}`, data),
-  delete: (id) => axios.delete(`${API_URL}/users/${id}`)
+  getProfile: () => api.get('/users/me'),
+  updateProfile: (data) => api.put('/users/me', data)
 };
 
 // Habit API
 export const habitAPI = {
-  getByUser: (userId) => axios.get(`${API_URL}/habits/user/${userId}`),
-  getById: (id) => axios.get(`${API_URL}/habits/${id}`),
-  create: (data) => axios.post(`${API_URL}/habits`, data),
-  update: (id, data) => axios.put(`${API_URL}/habits/${id}`, data),
-  delete: (id) => axios.delete(`${API_URL}/habits/${id}`)
+  getAll: () => api.get('/habits'),
+  getById: (id) => api.get(`/habits/${id}`),
+  create: (data) => api.post('/habits', data),
+  update: (id, data) => api.put(`/habits/${id}`, data),
+  delete: (id) => api.delete(`/habits/${id}`)
 };
 
 // Habit Record API
 export const recordAPI = {
-  getByHabit: (habitId) => axios.get(`${API_URL}/records/habit/${habitId}`),
-  getByUser: (userId) => axios.get(`${API_URL}/records/user/${userId}`),
-  getByRange: (userId, startDate, endDate) =>
-    axios.get(`${API_URL}/records/user/${userId}/range?startDate=${startDate}&endDate=${endDate}`),
-  create: (data) => axios.post(`${API_URL}/records`, data),
-  delete: (id) => axios.delete(`${API_URL}/records/${id}`)
+  getByHabit: (habitId) => api.get(`/records/habit/${habitId}`),
+  getAll: () => api.get('/records'),
+  getByRange: (startDate, endDate) =>
+    api.get(`/records/range?startDate=${startDate}&endDate=${endDate}`),
+  create: (data) => api.post('/records', data),
+  delete: (id) => api.delete(`/records/${id}`)
 };

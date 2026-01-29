@@ -1,53 +1,55 @@
-import React, { useState, useEffect } from 'react';
-import { userAPI } from './services/api';
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from './context/AuthContext';
+import Login from './components/Login';
+import Signup from './components/Signup';
 import HabitDashboard from './components/HabitDashboard';
-import UserSelector from './components/UserSelector';
+import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
 function App() {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [users, setUsers] = useState([]);
+  const { user, logout, loading } = useAuth();
 
-  useEffect(() => {
-    loadUsers();
-  }, []);
-
-  const loadUsers = async () => {
-    try {
-      const response = await userAPI.getAll();
-      setUsers(response.data);
-      if (response.data.length > 0) {
-        setCurrentUser(response.data[0]);
-      }
-    } catch (error) {
-      console.error('Error loading users:', error);
-    }
-  };
-
-  const handleCreateUser = async (username, email) => {
-    try {
-      const response = await userAPI.create({ username, email });
-      setUsers([...users, response.data]);
-      setCurrentUser(response.data);
-    } catch (error) {
-      console.error('Error creating user:', error);
-      alert('Error creating user. Username or email may already exist.');
-    }
-  };
+  if (loading) {
+    return (
+      <div className="App">
+        <div className="loading">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="App">
       <header className="app-header">
         <h1>Habit Tracker</h1>
+        {user && (
+          <div className="header-user">
+            <span>Hello, {user.username}</span>
+            <button onClick={logout} className="logout-btn">Logout</button>
+          </div>
+        )}
       </header>
+
       <div className="container">
-        <UserSelector
-          users={users}
-          currentUser={currentUser}
-          onUserChange={setCurrentUser}
-          onCreateUser={handleCreateUser}
-        />
-        {currentUser && <HabitDashboard userId={currentUser._id} />}
+        <Routes>
+          <Route
+            path="/login"
+            element={user ? <Navigate to="/" replace /> : <Login />}
+          />
+          <Route
+            path="/signup"
+            element={user ? <Navigate to="/" replace /> : <Signup />}
+          />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <HabitDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </div>
     </div>
   );

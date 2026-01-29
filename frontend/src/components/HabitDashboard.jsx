@@ -1,22 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { habitAPI, recordAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import HabitForm from './HabitForm';
 import HabitCard from './HabitCard';
 import './HabitDashboard.css';
 
-function HabitDashboard({ userId }) {
+function HabitDashboard() {
   const [habits, setHabits] = useState([]);
   const [records, setRecords] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     loadHabits();
     loadTodayRecords();
-  }, [userId]);
+  }, []);
 
   const loadHabits = async () => {
     try {
-      const response = await habitAPI.getByUser(userId);
+      const response = await habitAPI.getAll();
       setHabits(response.data);
     } catch (error) {
       console.error('Error loading habits:', error);
@@ -27,7 +29,7 @@ function HabitDashboard({ userId }) {
     try {
       const today = new Date().toISOString().split('T')[0];
       const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-      const response = await recordAPI.getByRange(userId, today, tomorrow);
+      const response = await recordAPI.getByRange(today, tomorrow);
       setRecords(response.data);
     } catch (error) {
       console.error('Error loading records:', error);
@@ -36,7 +38,7 @@ function HabitDashboard({ userId }) {
 
   const handleCreateHabit = async (habitData) => {
     try {
-      await habitAPI.create({ ...habitData, userId });
+      await habitAPI.create(habitData);
       loadHabits();
       setShowForm(false);
     } catch (error) {
@@ -66,7 +68,6 @@ function HabitDashboard({ userId }) {
       } else {
         await recordAPI.create({
           habitId,
-          userId,
           date: today,
           completed: true
         });
@@ -84,7 +85,7 @@ function HabitDashboard({ userId }) {
   return (
     <div className="habit-dashboard">
       <div className="dashboard-header">
-        <h2>My Habits</h2>
+        <h2>Welcome, {user?.username}!</h2>
         <button onClick={() => setShowForm(!showForm)}>
           {showForm ? 'Cancel' : '+ Add Habit'}
         </button>
