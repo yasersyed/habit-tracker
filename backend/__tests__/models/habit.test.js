@@ -21,7 +21,8 @@ describe('Habit Model', () => {
   beforeEach(async () => {
     testUser = await User.create({
       username: 'testuser',
-      email: 'test@example.com'
+      email: 'test@example.com',
+      password: 'password123'
     });
   });
 
