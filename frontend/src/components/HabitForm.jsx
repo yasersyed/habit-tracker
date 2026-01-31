@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { PRESET_HABITS, XP_TIERS } from '../data/presetHabits';
 import './HabitForm.css';
 
 const COLORS = [
@@ -6,13 +7,18 @@ const COLORS = [
   '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'
 ];
 
+const DIFFICULTIES = Object.keys(XP_TIERS);
+
 function HabitForm({ onSubmit, onCancel }) {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     frequency: 'daily',
-    color: '#3b82f6'
+    color: '#3b82f6',
+    xpReward: XP_TIERS.Easy
   });
+  const [selectedDifficulty, setSelectedDifficulty] = useState('Easy');
+  const [selectedPreset, setSelectedPreset] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -28,8 +34,47 @@ function HabitForm({ onSubmit, onCancel }) {
     });
   };
 
+  const handlePresetChange = (e) => {
+    const presetName = e.target.value;
+    setSelectedPreset(presetName);
+
+    if (!presetName) return;
+
+    const preset = PRESET_HABITS.find(p => p.name === presetName);
+    if (preset) {
+      setFormData({
+        ...formData,
+        name: preset.name,
+        description: preset.description,
+        xpReward: preset.xpReward
+      });
+      setSelectedDifficulty(preset.difficulty);
+    }
+  };
+
+  const handleDifficultyChange = (e) => {
+    const difficulty = e.target.value;
+    setSelectedDifficulty(difficulty);
+    setFormData({
+      ...formData,
+      xpReward: XP_TIERS[difficulty]
+    });
+  };
+
   return (
     <form className="habit-form" onSubmit={handleSubmit}>
+      <div className="form-group">
+        <label>Habit Template</label>
+        <select value={selectedPreset} onChange={handlePresetChange}>
+          <option value="">Custom Habit</option>
+          {PRESET_HABITS.map(preset => (
+            <option key={preset.name} value={preset.name}>
+              {preset.name} — {preset.difficulty} ({preset.xpReward} XP)
+            </option>
+          ))}
+        </select>
+      </div>
+
       <div className="form-group">
         <label>Habit Name *</label>
         <input
@@ -63,6 +108,19 @@ function HabitForm({ onSubmit, onCancel }) {
           </select>
         </div>
 
+        <div className="form-group">
+          <label>Difficulty (XP Reward)</label>
+          <select value={selectedDifficulty} onChange={handleDifficultyChange}>
+            {DIFFICULTIES.map(d => (
+              <option key={d} value={d}>
+                {d} — {XP_TIERS[d]} XP
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="form-row">
         <div className="form-group">
           <label>Color</label>
           <div className="color-picker">
