@@ -1,15 +1,18 @@
-import { describe, test, expect, beforeAll, afterEach, afterAll } from '@jest/globals';
+import { describe, test, expect, beforeAll, afterEach, afterAll, beforeEach } from '@jest/globals';
 import request from 'supertest';
 import express from 'express';
 import userRoutes from '../../routes/users.js';
 import User from '../../models/User.js';
-import { setupTestDB, clearTestDB, teardownTestDB } from '../setup.js';
+import { setupTestDB, clearTestDB, teardownTestDB, createAuthenticatedUser } from '../setup.js';
 
 const app = express();
 app.use(express.json());
 app.use('/api/users', userRoutes);
 
 describe('User Routes', () => {
+  let testUser;
+  let authToken;
+
   beforeAll(async () => {
     await setupTestDB();
   });
@@ -22,182 +25,91 @@ describe('User Routes', () => {
     await teardownTestDB();
   });
 
-  describe('GET /api/users', () => {
-    test('should return all users', async () => {
-      await User.create([
-        { username: 'user1', email: 'user1@example.com' },
-        { username: 'user2', email: 'user2@example.com' }
-      ]);
+  beforeEach(async () => {
+    const auth = await createAuthenticatedUser();
+    testUser = auth.user;
+    authToken = auth.token;
+  });
 
-      const response = await request(app).get('/api/users');
+  describe('GET /api/users/me', () => {
+    test('should return current user profile', async () => {
+      const response = await request(app)
+        .get('/api/users/me')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(2);
-      expect(response.body[0].username).toBeDefined();
-      expect(response.body[0].email).toBeDefined();
+      expect(response.body._id).toBe(testUser._id.toString());
+      expect(response.body.username).toBe(testUser.username);
+      expect(response.body.email).toBe(testUser.email);
+      expect(response.body.password).toBeUndefined();
     });
 
-    test('should return empty array when no users exist', async () => {
-      const response = await request(app).get('/api/users');
+    test('should return 401 without authentication', async () => {
+      const response = await request(app).get('/api/users/me');
 
-      expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(0);
+      expect(response.status).toBe(401);
+    });
+
+    test('should return 401 with invalid token', async () => {
+      const response = await request(app)
+        .get('/api/users/me')
+        .set('Authorization', 'Bearer invalidtoken');
+
+      expect(response.status).toBe(401);
     });
   });
 
-  describe('GET /api/users/:id', () => {
-    test('should return a user by id', async () => {
-      const user = await User.create({
-        username: 'testuser',
-        email: 'test@example.com'
-      });
-
-      const response = await request(app).get(`/api/users/${user._id}`);
+  describe('PUT /api/users/me', () => {
+    test('should update current user username', async () => {
+      const response = await request(app)
+        .put('/api/users/me')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ username: 'newusername' });
 
       expect(response.status).toBe(200);
-      expect(response.body.username).toBe('testuser');
-      expect(response.body.email).toBe('test@example.com');
+      expect(response.body.username).toBe('newusername');
+      expect(response.body.email).toBe(testUser.email);
+
+      const updatedUser = await User.findById(testUser._id);
+      expect(updatedUser.username).toBe('newusername');
     });
 
-    test('should return 404 for non-existent user', async () => {
-      const fakeId = '507f1f77bcf86cd799439011';
-      const response = await request(app).get(`/api/users/${fakeId}`);
-
-      expect(response.status).toBe(404);
-      expect(response.body.message).toBe('User not found');
-    });
-
-    test('should return 500 for invalid id format', async () => {
-      const response = await request(app).get('/api/users/invalid-id');
-
-      expect(response.status).toBe(500);
-    });
-  });
-
-  describe('POST /api/users', () => {
-    test('should create a new user', async () => {
-      const userData = {
-        username: 'newuser',
-        email: 'newuser@example.com'
-      };
-
+    test('should return 401 without authentication', async () => {
       const response = await request(app)
-        .post('/api/users')
-        .send(userData);
+        .put('/api/users/me')
+        .send({ username: 'newusername' });
 
-      expect(response.status).toBe(201);
-      expect(response.body.username).toBe(userData.username);
-      expect(response.body.email).toBe(userData.email);
-      expect(response.body._id).toBeDefined();
-
-      const userInDb = await User.findById(response.body._id);
-      expect(userInDb).toBeDefined();
-      expect(userInDb.username).toBe(userData.username);
-    });
-
-    test('should return 400 for missing username', async () => {
-      const response = await request(app)
-        .post('/api/users')
-        .send({ email: 'test@example.com' });
-
-      expect(response.status).toBe(400);
-    });
-
-    test('should return 400 for missing email', async () => {
-      const response = await request(app)
-        .post('/api/users')
-        .send({ username: 'testuser' });
-
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(401);
     });
 
     test('should return 400 for duplicate username', async () => {
       await User.create({
-        username: 'testuser',
-        email: 'test1@example.com'
+        username: 'existinguser',
+        email: 'existing@example.com',
+        password: 'password123'
       });
 
       const response = await request(app)
-        .post('/api/users')
-        .send({
-          username: 'testuser',
-          email: 'test2@example.com'
-        });
+        .put('/api/users/me')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ username: 'existinguser' });
 
       expect(response.status).toBe(400);
     });
-  });
 
-  describe('PUT /api/users/:id', () => {
-    test('should update a user', async () => {
-      const user = await User.create({
-        username: 'oldname',
-        email: 'old@example.com'
-      });
+    test('should not change email', async () => {
+      const originalEmail = testUser.email;
 
       const response = await request(app)
-        .put(`/api/users/${user._id}`)
-        .send({
-          username: 'newname',
-          email: 'new@example.com'
-        });
+        .put('/api/users/me')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ email: 'newemail@example.com' });
 
       expect(response.status).toBe(200);
-      expect(response.body.username).toBe('newname');
-      expect(response.body.email).toBe('new@example.com');
+      expect(response.body.email).toBe(originalEmail);
 
-      const updatedUser = await User.findById(user._id);
-      expect(updatedUser.username).toBe('newname');
-      expect(updatedUser.email).toBe('new@example.com');
-    });
-
-    test('should return 404 for non-existent user', async () => {
-      const fakeId = '507f1f77bcf86cd799439011';
-      const response = await request(app)
-        .put(`/api/users/${fakeId}`)
-        .send({ username: 'newname' });
-
-      expect(response.status).toBe(404);
-    });
-
-    test('should allow partial updates', async () => {
-      const user = await User.create({
-        username: 'testuser',
-        email: 'test@example.com'
-      });
-
-      const response = await request(app)
-        .put(`/api/users/${user._id}`)
-        .send({ username: 'updatedname' });
-
-      expect(response.status).toBe(200);
-      expect(response.body.username).toBe('updatedname');
-      expect(response.body.email).toBe('test@example.com');
-    });
-  });
-
-  describe('DELETE /api/users/:id', () => {
-    test('should delete a user', async () => {
-      const user = await User.create({
-        username: 'testuser',
-        email: 'test@example.com'
-      });
-
-      const response = await request(app).delete(`/api/users/${user._id}`);
-
-      expect(response.status).toBe(200);
-      expect(response.body.message).toBe('User deleted');
-
-      const deletedUser = await User.findById(user._id);
-      expect(deletedUser).toBeNull();
-    });
-
-    test('should return 404 for non-existent user', async () => {
-      const fakeId = '507f1f77bcf86cd799439011';
-      const response = await request(app).delete(`/api/users/${fakeId}`);
-
-      expect(response.status).toBe(404);
-      expect(response.body.message).toBe('User not found');
+      const user = await User.findById(testUser._id);
+      expect(user.email).toBe(originalEmail);
     });
   });
 });

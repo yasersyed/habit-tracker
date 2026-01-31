@@ -4,7 +4,7 @@ import express from 'express';
 import habitRoutes from '../../routes/habits.js';
 import Habit from '../../models/Habit.js';
 import User from '../../models/User.js';
-import { setupTestDB, clearTestDB, teardownTestDB } from '../setup.js';
+import { setupTestDB, clearTestDB, teardownTestDB, createAuthenticatedUser } from '../setup.js';
 
 const app = express();
 app.use(express.json());
@@ -12,6 +12,7 @@ app.use('/api/habits', habitRoutes);
 
 describe('Habit Routes', () => {
   let testUser;
+  let authToken;
 
   beforeAll(async () => {
     await setupTestDB();
@@ -26,20 +27,21 @@ describe('Habit Routes', () => {
   });
 
   beforeEach(async () => {
-    testUser = await User.create({
-      username: 'testuser',
-      email: 'test@example.com'
-    });
+    const auth = await createAuthenticatedUser();
+    testUser = auth.user;
+    authToken = auth.token;
   });
 
-  describe('GET /api/habits/user/:userId', () => {
-    test('should return all habits for a user', async () => {
+  describe('GET /api/habits', () => {
+    test('should return all habits for authenticated user', async () => {
       await Habit.create([
         { userId: testUser._id, name: 'Habit 1', frequency: 'daily' },
         { userId: testUser._id, name: 'Habit 2', frequency: 'weekly' }
       ]);
 
-      const response = await request(app).get(`/api/habits/user/${testUser._id}`);
+      const response = await request(app)
+        .get('/api/habits')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(2);
@@ -48,28 +50,38 @@ describe('Habit Routes', () => {
     });
 
     test('should return empty array when user has no habits', async () => {
-      const response = await request(app).get(`/api/habits/user/${testUser._id}`);
+      const response = await request(app)
+        .get('/api/habits')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(0);
     });
 
     test('should not return habits from other users', async () => {
-      const otherUser = await User.create({
+      const otherAuth = await createAuthenticatedUser({
         username: 'otheruser',
         email: 'other@example.com'
       });
 
       await Habit.create([
         { userId: testUser._id, name: 'User 1 Habit' },
-        { userId: otherUser._id, name: 'User 2 Habit' }
+        { userId: otherAuth.user._id, name: 'User 2 Habit' }
       ]);
 
-      const response = await request(app).get(`/api/habits/user/${testUser._id}`);
+      const response = await request(app)
+        .get('/api/habits')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(1);
       expect(response.body[0].name).toBe('User 1 Habit');
+    });
+
+    test('should return 401 without authentication', async () => {
+      const response = await request(app).get('/api/habits');
+
+      expect(response.status).toBe(401);
     });
   });
 
@@ -82,7 +94,9 @@ describe('Habit Routes', () => {
         frequency: 'daily'
       });
 
-      const response = await request(app).get(`/api/habits/${habit._id}`);
+      const response = await request(app)
+        .get(`/api/habits/${habit._id}`)
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body.name).toBe('Test Habit');
@@ -92,17 +106,36 @@ describe('Habit Routes', () => {
 
     test('should return 404 for non-existent habit', async () => {
       const fakeId = '507f1f77bcf86cd799439011';
-      const response = await request(app).get(`/api/habits/${fakeId}`);
+      const response = await request(app)
+        .get(`/api/habits/${fakeId}`)
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(404);
       expect(response.body.message).toBe('Habit not found');
+    });
+
+    test('should return 404 for habit belonging to other user', async () => {
+      const otherAuth = await createAuthenticatedUser({
+        username: 'otheruser',
+        email: 'other@example.com'
+      });
+
+      const habit = await Habit.create({
+        userId: otherAuth.user._id,
+        name: 'Other User Habit'
+      });
+
+      const response = await request(app)
+        .get(`/api/habits/${habit._id}`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(404);
     });
   });
 
   describe('POST /api/habits', () => {
     test('should create a new habit', async () => {
       const habitData = {
-        userId: testUser._id,
         name: 'New Habit',
         description: 'Test Description',
         frequency: 'weekly',
@@ -111,6 +144,7 @@ describe('Habit Routes', () => {
 
       const response = await request(app)
         .post('/api/habits')
+        .set('Authorization', `Bearer ${authToken}`)
         .send(habitData);
 
       expect(response.status).toBe(201);
@@ -118,6 +152,7 @@ describe('Habit Routes', () => {
       expect(response.body.description).toBe(habitData.description);
       expect(response.body.frequency).toBe(habitData.frequency);
       expect(response.body.color).toBe(habitData.color);
+      expect(response.body.userId).toBe(testUser._id.toString());
       expect(response.body._id).toBeDefined();
 
       const habitInDb = await Habit.findById(response.body._id);
@@ -127,12 +162,12 @@ describe('Habit Routes', () => {
 
     test('should create habit with minimal data', async () => {
       const habitData = {
-        userId: testUser._id,
         name: 'Minimal Habit'
       };
 
       const response = await request(app)
         .post('/api/habits')
+        .set('Authorization', `Bearer ${authToken}`)
         .send(habitData);
 
       expect(response.status).toBe(201);
@@ -141,18 +176,11 @@ describe('Habit Routes', () => {
       expect(response.body.color).toBe('#3b82f6');
     });
 
-    test('should return 400 for missing userId', async () => {
-      const response = await request(app)
-        .post('/api/habits')
-        .send({ name: 'Test Habit' });
-
-      expect(response.status).toBe(400);
-    });
-
     test('should return 400 for missing name', async () => {
       const response = await request(app)
         .post('/api/habits')
-        .send({ userId: testUser._id });
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({});
 
       expect(response.status).toBe(400);
     });
@@ -160,13 +188,21 @@ describe('Habit Routes', () => {
     test('should return 400 for invalid frequency', async () => {
       const response = await request(app)
         .post('/api/habits')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({
-          userId: testUser._id,
           name: 'Test Habit',
           frequency: 'invalid'
         });
 
       expect(response.status).toBe(400);
+    });
+
+    test('should return 401 without authentication', async () => {
+      const response = await request(app)
+        .post('/api/habits')
+        .send({ name: 'Test Habit' });
+
+      expect(response.status).toBe(401);
     });
   });
 
@@ -181,6 +217,7 @@ describe('Habit Routes', () => {
 
       const response = await request(app)
         .put(`/api/habits/${habit._id}`)
+        .set('Authorization', `Bearer ${authToken}`)
         .send({
           name: 'New Name',
           description: 'New Description',
@@ -202,7 +239,27 @@ describe('Habit Routes', () => {
       const fakeId = '507f1f77bcf86cd799439011';
       const response = await request(app)
         .put(`/api/habits/${fakeId}`)
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ name: 'New Name' });
+
+      expect(response.status).toBe(404);
+    });
+
+    test('should return 404 for habit belonging to other user', async () => {
+      const otherAuth = await createAuthenticatedUser({
+        username: 'otheruser',
+        email: 'other@example.com'
+      });
+
+      const habit = await Habit.create({
+        userId: otherAuth.user._id,
+        name: 'Other User Habit'
+      });
+
+      const response = await request(app)
+        .put(`/api/habits/${habit._id}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ name: 'Updated Name' });
 
       expect(response.status).toBe(404);
     });
@@ -216,6 +273,7 @@ describe('Habit Routes', () => {
 
       const response = await request(app)
         .put(`/api/habits/${habit._id}`)
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ name: 'Updated Name' });
 
       expect(response.status).toBe(200);
@@ -231,7 +289,9 @@ describe('Habit Routes', () => {
         name: 'Test Habit'
       });
 
-      const response = await request(app).delete(`/api/habits/${habit._id}`);
+      const response = await request(app)
+        .delete(`/api/habits/${habit._id}`)
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body.message).toBe('Habit deleted');
@@ -242,10 +302,33 @@ describe('Habit Routes', () => {
 
     test('should return 404 for non-existent habit', async () => {
       const fakeId = '507f1f77bcf86cd799439011';
-      const response = await request(app).delete(`/api/habits/${fakeId}`);
+      const response = await request(app)
+        .delete(`/api/habits/${fakeId}`)
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(404);
       expect(response.body.message).toBe('Habit not found');
+    });
+
+    test('should return 404 for habit belonging to other user', async () => {
+      const otherAuth = await createAuthenticatedUser({
+        username: 'otheruser',
+        email: 'other@example.com'
+      });
+
+      const habit = await Habit.create({
+        userId: otherAuth.user._id,
+        name: 'Other User Habit'
+      });
+
+      const response = await request(app)
+        .delete(`/api/habits/${habit._id}`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(404);
+
+      const habitStillExists = await Habit.findById(habit._id);
+      expect(habitStillExists).not.toBeNull();
     });
   });
 });

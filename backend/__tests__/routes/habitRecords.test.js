@@ -4,8 +4,7 @@ import express from 'express';
 import habitRecordRoutes from '../../routes/habitRecords.js';
 import HabitRecord from '../../models/HabitRecord.js';
 import Habit from '../../models/Habit.js';
-import User from '../../models/User.js';
-import { setupTestDB, clearTestDB, teardownTestDB } from '../setup.js';
+import { setupTestDB, clearTestDB, teardownTestDB, createAuthenticatedUser } from '../setup.js';
 
 const app = express();
 app.use(express.json());
@@ -13,6 +12,7 @@ app.use('/api/records', habitRecordRoutes);
 
 describe('HabitRecord Routes', () => {
   let testUser;
+  let authToken;
   let testHabit;
 
   beforeAll(async () => {
@@ -28,10 +28,9 @@ describe('HabitRecord Routes', () => {
   });
 
   beforeEach(async () => {
-    testUser = await User.create({
-      username: 'testuser',
-      email: 'test@example.com'
-    });
+    const auth = await createAuthenticatedUser();
+    testUser = auth.user;
+    authToken = auth.token;
 
     testHabit = await Habit.create({
       userId: testUser._id,
@@ -47,7 +46,9 @@ describe('HabitRecord Routes', () => {
         { habitId: testHabit._id, userId: testUser._id, date: new Date('2024-01-02') }
       ]);
 
-      const response = await request(app).get(`/api/records/habit/${testHabit._id}`);
+      const response = await request(app)
+        .get(`/api/records/habit/${testHabit._id}`)
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(2);
@@ -60,7 +61,9 @@ describe('HabitRecord Routes', () => {
         { habitId: testHabit._id, userId: testUser._id, date: new Date('2024-01-02') }
       ]);
 
-      const response = await request(app).get(`/api/records/habit/${testHabit._id}`);
+      const response = await request(app)
+        .get(`/api/records/habit/${testHabit._id}`)
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(new Date(response.body[0].date).getTime()).toBeGreaterThan(
@@ -69,21 +72,32 @@ describe('HabitRecord Routes', () => {
     });
 
     test('should return empty array when habit has no records', async () => {
-      const response = await request(app).get(`/api/records/habit/${testHabit._id}`);
+      const response = await request(app)
+        .get(`/api/records/habit/${testHabit._id}`)
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(0);
     });
+
+    test('should return 401 without authentication', async () => {
+      const response = await request(app)
+        .get(`/api/records/habit/${testHabit._id}`);
+
+      expect(response.status).toBe(401);
+    });
   });
 
-  describe('GET /api/records/user/:userId', () => {
-    test('should return all records for a user with populated habit data', async () => {
+  describe('GET /api/records', () => {
+    test('should return all records for authenticated user with populated habit data', async () => {
       await HabitRecord.create([
         { habitId: testHabit._id, userId: testUser._id, date: new Date('2024-01-01') },
         { habitId: testHabit._id, userId: testUser._id, date: new Date('2024-01-02') }
       ]);
 
-      const response = await request(app).get(`/api/records/user/${testUser._id}`);
+      const response = await request(app)
+        .get('/api/records')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(2);
@@ -92,24 +106,26 @@ describe('HabitRecord Routes', () => {
     });
 
     test('should not return records from other users', async () => {
-      const otherUser = await User.create({
+      const otherAuth = await createAuthenticatedUser({
         username: 'otheruser',
         email: 'other@example.com'
       });
 
       await HabitRecord.create([
         { habitId: testHabit._id, userId: testUser._id, date: new Date('2024-01-01') },
-        { habitId: testHabit._id, userId: otherUser._id, date: new Date('2024-01-02') }
+        { habitId: testHabit._id, userId: otherAuth.user._id, date: new Date('2024-01-02') }
       ]);
 
-      const response = await request(app).get(`/api/records/user/${testUser._id}`);
+      const response = await request(app)
+        .get('/api/records')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(1);
     });
   });
 
-  describe('GET /api/records/user/:userId/range', () => {
+  describe('GET /api/records/range', () => {
     test('should return records within date range', async () => {
       await HabitRecord.create([
         { habitId: testHabit._id, userId: testUser._id, date: new Date('2024-01-05') },
@@ -119,8 +135,9 @@ describe('HabitRecord Routes', () => {
       ]);
 
       const response = await request(app)
-        .get(`/api/records/user/${testUser._id}/range`)
-        .query({ startDate: '2024-01-08', endDate: '2024-01-18' });
+        .get('/api/records/range')
+        .query({ startDate: '2024-01-08', endDate: '2024-01-18' })
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(2);
@@ -133,11 +150,38 @@ describe('HabitRecord Routes', () => {
       ]);
 
       const response = await request(app)
-        .get(`/api/records/user/${testUser._id}/range`)
-        .query({ startDate: '2024-02-01', endDate: '2024-02-28' });
+        .get('/api/records/range')
+        .query({ startDate: '2024-02-01', endDate: '2024-02-28' })
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(0);
+    });
+
+    test('should not return records from other users', async () => {
+      const otherAuth = await createAuthenticatedUser({
+        username: 'otheruser',
+        email: 'other@example.com'
+      });
+
+      const otherHabit = await Habit.create({
+        userId: otherAuth.user._id,
+        name: 'Other Habit',
+        frequency: 'daily'
+      });
+
+      await HabitRecord.create([
+        { habitId: testHabit._id, userId: testUser._id, date: new Date('2024-01-10') },
+        { habitId: otherHabit._id, userId: otherAuth.user._id, date: new Date('2024-01-10') }
+      ]);
+
+      const response = await request(app)
+        .get('/api/records/range')
+        .query({ startDate: '2024-01-01', endDate: '2024-01-31' })
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveLength(1);
     });
   });
 
@@ -145,7 +189,6 @@ describe('HabitRecord Routes', () => {
     test('should create a new habit record', async () => {
       const recordData = {
         habitId: testHabit._id,
-        userId: testUser._id,
         date: '2024-01-15',
         completed: true,
         notes: 'Completed successfully'
@@ -153,10 +196,12 @@ describe('HabitRecord Routes', () => {
 
       const response = await request(app)
         .post('/api/records')
+        .set('Authorization', `Bearer ${authToken}`)
         .send(recordData);
 
       expect(response.status).toBe(201);
       expect(response.body.habitId).toBe(testHabit._id.toString());
+      expect(response.body.userId).toBe(testUser._id.toString());
       expect(response.body.completed).toBe(true);
       expect(response.body.notes).toBe('Completed successfully');
 
@@ -177,9 +222,9 @@ describe('HabitRecord Routes', () => {
 
       const response = await request(app)
         .post('/api/records')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({
           habitId: testHabit._id,
-          userId: testUser._id,
           date,
           completed: false,
           notes: 'Updated note'
@@ -200,9 +245,9 @@ describe('HabitRecord Routes', () => {
     test('should normalize date to midnight UTC', async () => {
       const response = await request(app)
         .post('/api/records')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({
           habitId: testHabit._id,
-          userId: testUser._id,
           date: '2024-01-15T14:30:00.000Z',
           completed: true
         });
@@ -219,9 +264,22 @@ describe('HabitRecord Routes', () => {
     test('should return 400 for missing required fields', async () => {
       const response = await request(app)
         .post('/api/records')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ habitId: testHabit._id });
 
       expect(response.status).toBe(400);
+    });
+
+    test('should return 401 without authentication', async () => {
+      const response = await request(app)
+        .post('/api/records')
+        .send({
+          habitId: testHabit._id,
+          date: '2024-01-15',
+          completed: true
+        });
+
+      expect(response.status).toBe(401);
     });
   });
 
@@ -233,7 +291,9 @@ describe('HabitRecord Routes', () => {
         date: new Date()
       });
 
-      const response = await request(app).delete(`/api/records/${record._id}`);
+      const response = await request(app)
+        .delete(`/api/records/${record._id}`)
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body.message).toBe('Record deleted');
@@ -244,10 +304,34 @@ describe('HabitRecord Routes', () => {
 
     test('should return 404 for non-existent record', async () => {
       const fakeId = '507f1f77bcf86cd799439011';
-      const response = await request(app).delete(`/api/records/${fakeId}`);
+      const response = await request(app)
+        .delete(`/api/records/${fakeId}`)
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(404);
       expect(response.body.message).toBe('Record not found');
+    });
+
+    test('should return 404 for record belonging to other user', async () => {
+      const otherAuth = await createAuthenticatedUser({
+        username: 'otheruser',
+        email: 'other@example.com'
+      });
+
+      const record = await HabitRecord.create({
+        habitId: testHabit._id,
+        userId: otherAuth.user._id,
+        date: new Date()
+      });
+
+      const response = await request(app)
+        .delete(`/api/records/${record._id}`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(404);
+
+      const recordStillExists = await HabitRecord.findById(record._id);
+      expect(recordStillExists).not.toBeNull();
     });
   });
 });
