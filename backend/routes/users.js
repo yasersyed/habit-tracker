@@ -10,7 +10,10 @@ router.get('/me', authMiddleware, async (req, res) => {
     res.json({
       _id: req.user._id,
       username: req.user.username,
-      email: req.user.email
+      email: req.user.email,
+      level: req.user.level,
+      xp: req.user.xp,
+      totalXp: req.user.totalXp
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -28,7 +31,10 @@ router.put('/me', authMiddleware, async (req, res) => {
     res.json({
       _id: updatedUser._id,
       username: updatedUser.username,
-      email: updatedUser.email
+      email: updatedUser.email,
+      level: updatedUser.level,
+      xp: updatedUser.xp,
+      totalXp: updatedUser.totalXp
     });
   } catch (error) {
     res.status(400).json({ message: error.message });

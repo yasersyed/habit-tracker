@@ -1,10 +1,17 @@
 import express from 'express';
 import HabitRecord from '../models/HabitRecord.js';
+import Habit from '../models/Habit.js';
+import User from '../models/User.js';
 import authMiddleware from '../middleware/auth.js';
 
 const router = express.Router();
 
 router.use(authMiddleware);
+
+async function getUserXpInfo(userId) {
+  const user = await User.findById(userId);
+  return { level: user.level, xp: user.xp, totalXp: user.totalXp };
+}
 
 // Get all records for a habit (verify ownership)
 router.get('/habit/:habitId', async (req, res) => {
@@ -56,6 +63,12 @@ router.post('/', async (req, res) => {
     const recordDate = new Date(date);
     recordDate.setUTCHours(0, 0, 0, 0);
 
+    const habit = await Habit.findById(habitId);
+    if (!habit) {
+      return res.status(404).json({ message: 'Habit not found' });
+    }
+    const xpReward = habit.xpReward || 0;
+
     let record = await HabitRecord.findOne({
       habitId,
       userId: req.user._id,
@@ -63,9 +76,23 @@ router.post('/', async (req, res) => {
     });
 
     if (record) {
-      record.completed = completed !== undefined ? completed : record.completed;
+      const wasCompleted = record.completed;
+      const isNowCompleted = completed !== undefined ? completed : record.completed;
+
+      record.completed = isNowCompleted;
       record.notes = notes !== undefined ? notes : record.notes;
       await record.save();
+
+      // Toggle XP: false->true = award, true->false = deduct
+      if (!wasCompleted && isNowCompleted) {
+        const user = await User.findById(req.user._id);
+        user.totalXp += xpReward;
+        await user.save();
+      } else if (wasCompleted && !isNowCompleted) {
+        const user = await User.findById(req.user._id);
+        user.totalXp = Math.max(0, user.totalXp - xpReward);
+        await user.save();
+      }
     } else {
       record = new HabitRecord({
         habitId,
@@ -75,9 +102,17 @@ router.post('/', async (req, res) => {
         notes
       });
       await record.save();
+
+      // Award XP for new completed record
+      if (completed) {
+        const user = await User.findById(req.user._id);
+        user.totalXp += xpReward;
+        await user.save();
+      }
     }
 
-    res.status(201).json(record);
+    const userXp = await getUserXpInfo(req.user._id);
+    res.status(201).json({ record, userXp });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -94,8 +129,19 @@ router.delete('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Record not found' });
     }
 
+    // Deduct XP if record was completed
+    if (record.completed) {
+      const habit = await Habit.findById(record.habitId);
+      if (habit) {
+        const user = await User.findById(req.user._id);
+        user.totalXp = Math.max(0, user.totalXp - (habit.xpReward || 0));
+        await user.save();
+      }
+    }
+
     await record.deleteOne();
-    res.json({ message: 'Record deleted' });
+    const userXp = await getUserXpInfo(req.user._id);
+    res.json({ message: 'Record deleted', userXp });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

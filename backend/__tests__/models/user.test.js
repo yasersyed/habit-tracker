@@ -227,6 +227,46 @@ describe('User Model', () => {
     expect(isWrongMatch).toBe(false);
   });
 
+  test('should have default XP fields', async () => {
+    const user = await User.create({
+      username: 'testuser',
+      email: 'test@example.com',
+      password: 'password123'
+    });
+
+    expect(user.level).toBe(1);
+    expect(user.xp).toBe(0);
+    expect(user.totalXp).toBe(0);
+  });
+
+  test('should compute level from totalXp on save', async () => {
+    const user = await User.create({
+      username: 'testuser',
+      email: 'test@example.com',
+      password: 'password123'
+    });
+
+    user.totalXp = 250;
+    await user.save();
+
+    expect(user.level).toBe(3);
+    expect(user.xp).toBe(50);
+  });
+
+  test('should handle tier boundary at level 11', async () => {
+    const user = await User.create({
+      username: 'testuser',
+      email: 'test@example.com',
+      password: 'password123'
+    });
+
+    user.totalXp = 1000;
+    await user.save();
+
+    expect(user.level).toBe(11);
+    expect(user.xp).toBe(0);
+  });
+
   test('should not rehash password if not modified', async () => {
     const user = await User.create({
       username: 'testuser',

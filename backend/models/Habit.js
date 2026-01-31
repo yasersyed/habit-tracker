@@ -20,6 +20,11 @@ const habitSchema = new mongoose.Schema({
     enum: ['daily', 'weekly', 'monthly'],
     default: 'daily'
   },
+  xpReward: {
+    type: Number,
+    default: 25,
+    min: 0
+  },
   color: {
     type: String,
     default: '#3b82f6'
