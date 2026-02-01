@@ -214,3 +214,31 @@ Authorization: Bearer <token>
 - JWT tokens expire after 7 days by default
 - All habit and record endpoints are protected
 - Users can only access their own data
+
+## Roadmap
+
+### Frontend To-Do
+
+- [ ] **Habit Streaks UI** - Display current and best streak counts on each habit card
+- [ ] **Calendar View** - Calendar component showing completion history for habits
+- [ ] **Statistics / Charts** - Visual progress charts (weekly/monthly completion rates, XP over time)
+- [ ] **Habit Categories & Tags** - Organize habits with categories/tags and filter by them
+- [ ] **Dark Mode** - Dark theme toggle using CSS variables
+- [ ] **Mobile Responsiveness** - Improve layouts for small screens (cards, forms, navigation)
+- [ ] **Notifications / Reminders UI** - Settings page for configuring habit reminders
+- [ ] **Data Export UI** - Button to export habit data as CSV or JSON
+- [ ] **Edit Habit** - UI for editing an existing habit (name, frequency, color, difficulty)
+- [ ] **User Profile Page** - View/edit profile info and see overall stats
+
+### Backend To-Do
+
+- [ ] **Streak Calculation** - API logic to compute current/longest streaks per habit
+- [ ] **Statistics Endpoints** - Endpoints for aggregated stats (completion rates, XP trends)
+- [ ] **Categories/Tags Model** - Category/tag schema and association with habits
+- [ ] **Reminder System** - Scheduled notifications (email or push) for habit reminders
+- [ ] **Data Export Endpoint** - `GET /api/export` to generate CSV/JSON of user data
+- [ ] **Rate Limiting** - Rate limiting middleware to protect API endpoints
+- [ ] **Input Validation** - express-validator or similar for stricter request validation
+- [ ] **Password Reset** - Forgot password / reset flow with email
+- [ ] **Habit Archiving** - Soft-delete / archive habits instead of permanent deletion
+- [ ] **Pagination** - Pagination for habits and records list endpoints
