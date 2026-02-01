@@ -215,6 +215,14 @@ Authorization: Bearer <token>
 - All habit and record endpoints are protected
 - Users can only access their own data
 
+## Production Deployment Prerequisites
+
+- **CORS Configuration**: The backend currently uses `app.use(cors())` which allows requests from any origin. Before deploying to production, configure `cors()` with a specific `origin` allowlist to restrict access to trusted domains only.
+- **Vite Proxy Replacement**: The Vite dev server proxy (`/api` → `localhost:5000`) only works in development. In production, either serve the frontend from the same origin as the backend (e.g. behind a reverse proxy like Nginx) or configure the frontend to call the backend URL directly with proper CORS headers.
+- **JWT Secret**: Replace the default `JWT_SECRET` in `.env` with a strong, randomly generated secret.
+- **HTTPS**: Serve all traffic over HTTPS to protect JWT tokens and credentials in transit.
+- **Environment Variables**: Ensure all `.env` values are set for production (database URI, port, secrets) and never committed to version control.
+
 ## Roadmap
 
 ### Frontend To-Do
