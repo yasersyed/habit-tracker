@@ -225,6 +225,24 @@ Authorization: Bearer <token>
 
 ## Roadmap
 
+### Bugs & Tech Debt (Priority)
+
+- [x] **`.env` in `.gitignore`** — Already handled
+- [ ] **MongoDB has no authentication** — Add credentials to the Docker Compose config and connection string
+- [ ] **CORS wide open** — Restrict `cors()` to specific allowed origins
+- [ ] **No rate limiting on auth** — Add rate limiting middleware to login/register endpoints
+- [ ] **Toggle logic bug** — Dashboard creates/deletes records to toggle, but POST route has dead code for toggling `completed` flag. Pick one approach and remove the other
+- [ ] **Habit deletion doesn't cascade** — Deleting a habit leaves orphaned `HabitRecord` documents and doesn't reclaim their XP
+- [ ] **Fragile date handling** — `loadTodayRecords` uses `Date.now() + 86400000` which breaks on DST transitions; frontend sends local date strings but backend normalizes to UTC midnight
+- [ ] **Duplicated `xpForLevel()`** — Exists in both `backend/utils/xp.js` and `frontend/src/components/HabitDashboard.jsx`; extract to a shared module
+- [ ] **Duplicated `presetHabits.js`** — Identical files in frontend and backend `data/` dirs; backend copy is unused
+- [ ] **`/api/auth/me` bypasses auth middleware** — Has inline JWT verification instead of using the shared middleware
+- [ ] **No input validation/sanitization** — No protection against NoSQL injection; add express-validator or similar
+- [ ] **No React error boundary** — Unhandled errors white-screen the app
+- [ ] **No production Docker setup** — No Dockerfiles for backend/frontend, no nginx config
+- [ ] **No structured logging** — Only `console.log/error`
+- [ ] **No pagination** — List endpoints will degrade with large datasets
+
 ### Frontend To-Do
 
 - [ ] **Habit Streaks UI** - Display current and best streak counts on each habit card
