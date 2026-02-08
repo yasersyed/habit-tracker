@@ -214,3 +214,92 @@ Authorization: Bearer <token>
 - JWT tokens expire after 7 days by default
 - All habit and record endpoints are protected
 - Users can only access their own data
+
+## Kubernetes Deployment
+
+The application includes Kubernetes manifests using Kustomize with base + overlay structure.
+
+### Build Docker Images
+
+```bash
+docker build -t habit-tracker-backend ./backend
+docker build -t habit-tracker-frontend ./frontend
+```
+
+### Deploy to Dev (NodePort)
+
+```bash
+kubectl apply -k kube/overlays/dev/
+```
+
+Access the app at `http://<node-ip>:30080`.
+
+### Deploy to Prod (LoadBalancer)
+
+```bash
+kubectl apply -k kube/overlays/prod/
+```
+
+### Verify Deployment
+
+```bash
+kubectl get all -n habit-tracker
+```
+
+### Secrets
+
+Update `kube/base/secrets.yaml` with production credentials before deploying. The default values are placeholders only.
+
+## Production Deployment Prerequisites
+
+- **CORS Configuration**: The backend currently uses `app.use(cors())` which allows requests from any origin. Before deploying to production, configure `cors()` with a specific `origin` allowlist to restrict access to trusted domains only.
+- **Vite Proxy Replacement**: The Vite dev server proxy (`/api` → `localhost:5000`) only works in development. In production, either serve the frontend from the same origin as the backend (e.g. behind a reverse proxy like Nginx) or configure the frontend to call the backend URL directly with proper CORS headers.
+- **JWT Secret**: Replace the default `JWT_SECRET` in `.env` with a strong, randomly generated secret.
+- **HTTPS**: Serve all traffic over HTTPS to protect JWT tokens and credentials in transit.
+- **Environment Variables**: Ensure all `.env` values are set for production (database URI, port, secrets) and never committed to version control.
+
+## Roadmap
+
+### Bugs & Tech Debt (Priority)
+
+- [x] **`.env` in `.gitignore`** — Already handled
+- [x] **MongoDB has no authentication** — Add credentials to the Docker Compose config and connection string
+- [ ] **CORS wide open** — Restrict `cors()` to specific allowed origins
+- [ ] **No rate limiting on auth** — Add rate limiting middleware to login/register endpoints
+- [ ] **Toggle logic bug** — Dashboard creates/deletes records to toggle, but POST route has dead code for toggling `completed` flag. Pick one approach and remove the other
+- [ ] **Habit deletion doesn't cascade** — Deleting a habit leaves orphaned `HabitRecord` documents and doesn't reclaim their XP
+- [ ] **Fragile date handling** — `loadTodayRecords` uses `Date.now() + 86400000` which breaks on DST transitions; frontend sends local date strings but backend normalizes to UTC midnight
+- [ ] **Duplicated `xpForLevel()`** — Exists in both `backend/utils/xp.js` and `frontend/src/components/HabitDashboard.jsx`; extract to a shared module
+- [ ] **Duplicated `presetHabits.js`** — Identical files in frontend and backend `data/` dirs; backend copy is unused
+- [ ] **`/api/auth/me` bypasses auth middleware** — Has inline JWT verification instead of using the shared middleware
+- [ ] **No input validation/sanitization** — No protection against NoSQL injection; add express-validator or similar
+- [ ] **No React error boundary** — Unhandled errors white-screen the app
+- [x] **No production Docker setup** — No Dockerfiles for backend/frontend, no nginx config
+- [ ] **No structured logging** — Only `console.log/error`
+- [ ] **No pagination** — List endpoints will degrade with large datasets
+
+### Frontend To-Do
+
+- [ ] **Habit Streaks UI** - Display current and best streak counts on each habit card
+- [ ] **Calendar View** - Calendar component showing completion history for habits
+- [ ] **Statistics / Charts** - Visual progress charts (weekly/monthly completion rates, XP over time)
+- [ ] **Habit Categories & Tags** - Organize habits with categories/tags and filter by them
+- [ ] **Dark Mode** - Dark theme toggle using CSS variables
+- [ ] **Mobile Responsiveness** - Improve layouts for small screens (cards, forms, navigation)
+- [ ] **Notifications / Reminders UI** - Settings page for configuring habit reminders
+- [ ] **Data Export UI** - Button to export habit data as CSV or JSON
+- [ ] **Edit Habit** - UI for editing an existing habit (name, frequency, color, difficulty)
+- [ ] **User Profile Page** - View/edit profile info and see overall stats
+
+### Backend To-Do
+
+- [ ] **Streak Calculation** - API logic to compute current/longest streaks per habit
+- [ ] **Statistics Endpoints** - Endpoints for aggregated stats (completion rates, XP trends)
+- [ ] **Categories/Tags Model** - Category/tag schema and association with habits
+- [ ] **Reminder System** - Scheduled notifications (email or push) for habit reminders
+- [ ] **Data Export Endpoint** - `GET /api/export` to generate CSV/JSON of user data
+- [ ] **Rate Limiting** - Rate limiting middleware to protect API endpoints
+- [ ] **Input Validation** - express-validator or similar for stricter request validation
+- [ ] **Password Reset** - Forgot password / reset flow with email
+- [ ] **Habit Archiving** - Soft-delete / archive habits instead of permanent deletion
+- [ ] **Pagination** - Pagination for habits and records list endpoints

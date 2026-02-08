@@ -39,6 +39,7 @@ router.post('/', async (req, res) => {
     name: req.body.name,
     description: req.body.description,
     frequency: req.body.frequency,
+    xpReward: req.body.xpReward,
     color: req.body.color
   });
 
@@ -64,6 +65,7 @@ router.put('/:id', async (req, res) => {
     if (req.body.name) habit.name = req.body.name;
     if (req.body.description) habit.description = req.body.description;
     if (req.body.frequency) habit.frequency = req.body.frequency;
+    if (req.body.xpReward !== undefined) habit.xpReward = req.body.xpReward;
     if (req.body.color) habit.color = req.body.color;
 
     const updatedHabit = await habit.save();

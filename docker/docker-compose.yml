@@ -8,6 +8,8 @@ services:
     ports:
       - "27017:27017"
     environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: changeme-in-production
       MONGO_INITDB_DATABASE: habit_tracker
     volumes:
       - mongodb_data:/data/db

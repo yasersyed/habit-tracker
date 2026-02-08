@@ -1,20 +1,39 @@
 import React, { useState, useEffect } from 'react';
-import { habitAPI, recordAPI } from '../services/api';
+import { habitAPI, recordAPI, userAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import HabitForm from './HabitForm';
 import HabitCard from './HabitCard';
 import './HabitDashboard.css';
 
+function xpForLevel(level) {
+  if (level <= 10) return 100;
+  if (level <= 20) return 250;
+  if (level <= 30) return 500;
+  return 1000;
+}
+
 function HabitDashboard() {
   const [habits, setHabits] = useState([]);
   const [records, setRecords] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  const [userXp, setUserXp] = useState({ level: 1, xp: 0, totalXp: 0 });
   const { user } = useAuth();
 
   useEffect(() => {
     loadHabits();
     loadTodayRecords();
+    loadUserXp();
   }, []);
+
+  const loadUserXp = async () => {
+    try {
+      const response = await userAPI.getProfile();
+      const { level, xp, totalXp } = response.data;
+      setUserXp({ level, xp, totalXp });
+    } catch (error) {
+      console.error('Error loading user XP:', error);
+    }
+  };
 
   const loadHabits = async () => {
     try {
@@ -63,15 +82,21 @@ function HabitDashboard() {
       const today = new Date().toISOString().split('T')[0];
       const existingRecord = records.find(r => r.habitId._id === habitId);
 
+      let response;
       if (existingRecord) {
-        await recordAPI.delete(existingRecord._id);
+        response = await recordAPI.delete(existingRecord._id);
       } else {
-        await recordAPI.create({
+        response = await recordAPI.create({
           habitId,
           date: today,
           completed: true
         });
       }
+
+      if (response.data.userXp) {
+        setUserXp(response.data.userXp);
+      }
+
       loadTodayRecords();
     } catch (error) {
       console.error('Error toggling habit:', error);
@@ -82,8 +107,21 @@ function HabitDashboard() {
     return records.some(r => r.habitId._id === habitId);
   };
 
+  const xpToNext = xpForLevel(userXp.level);
+  const xpPercent = xpToNext > 0 ? (userXp.xp / xpToNext) * 100 : 0;
+
   return (
     <div className="habit-dashboard">
+      <div className="xp-progress-bar">
+        <div className="xp-header">
+          <span className="level-badge">LVL {userXp.level}</span>
+          <span className="xp-text">{userXp.xp} / {xpToNext} XP</span>
+        </div>
+        <div className="xp-bar-bg">
+          <div className="xp-bar-fill" style={{ width: `${xpPercent}%` }} />
+        </div>
+      </div>
+
       <div className="dashboard-header">
         <h2>Welcome, {user?.username}!</h2>
         <button onClick={() => setShowForm(!showForm)}>

@@ -15,6 +15,7 @@ function HabitCard({ habit, isCompleted, onToggle, onDelete }) {
 
       <div className="habit-meta">
         <span className="frequency-badge">{habit.frequency}</span>
+        <span className="xp-badge">+{habit.xpReward || 25} XP</span>
       </div>
 
       <button

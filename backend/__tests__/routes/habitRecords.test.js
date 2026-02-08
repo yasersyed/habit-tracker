@@ -4,6 +4,7 @@ import express from 'express';
 import habitRecordRoutes from '../../routes/habitRecords.js';
 import HabitRecord from '../../models/HabitRecord.js';
 import Habit from '../../models/Habit.js';
+import User from '../../models/User.js';
 import { setupTestDB, clearTestDB, teardownTestDB, createAuthenticatedUser } from '../setup.js';
 
 const app = express();
@@ -200,12 +201,14 @@ describe('HabitRecord Routes', () => {
         .send(recordData);
 
       expect(response.status).toBe(201);
-      expect(response.body.habitId).toBe(testHabit._id.toString());
-      expect(response.body.userId).toBe(testUser._id.toString());
-      expect(response.body.completed).toBe(true);
-      expect(response.body.notes).toBe('Completed successfully');
+      expect(response.body.record).toBeDefined();
+      expect(response.body.userXp).toBeDefined();
+      expect(response.body.record.habitId).toBe(testHabit._id.toString());
+      expect(response.body.record.userId).toBe(testUser._id.toString());
+      expect(response.body.record.completed).toBe(true);
+      expect(response.body.record.notes).toBe('Completed successfully');
 
-      const recordInDb = await HabitRecord.findById(response.body._id);
+      const recordInDb = await HabitRecord.findById(response.body.record._id);
       expect(recordInDb).toBeDefined();
     });
 
@@ -231,9 +234,9 @@ describe('HabitRecord Routes', () => {
         });
 
       expect(response.status).toBe(201);
-      expect(response.body._id).toBe(existingRecord._id.toString());
-      expect(response.body.completed).toBe(false);
-      expect(response.body.notes).toBe('Updated note');
+      expect(response.body.record._id).toBe(existingRecord._id.toString());
+      expect(response.body.record.completed).toBe(false);
+      expect(response.body.record.notes).toBe('Updated note');
 
       const count = await HabitRecord.countDocuments({
         habitId: testHabit._id,
@@ -254,7 +257,7 @@ describe('HabitRecord Routes', () => {
 
       expect(response.status).toBe(201);
 
-      const record = await HabitRecord.findById(response.body._id);
+      const record = await HabitRecord.findById(response.body.record._id);
       const recordDate = new Date(record.date);
       expect(recordDate.getUTCHours()).toBe(0);
       expect(recordDate.getUTCMinutes()).toBe(0);
@@ -297,6 +300,7 @@ describe('HabitRecord Routes', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.message).toBe('Record deleted');
+      expect(response.body.userXp).toBeDefined();
 
       const deletedRecord = await HabitRecord.findById(record._id);
       expect(deletedRecord).toBeNull();
@@ -332,6 +336,123 @@ describe('HabitRecord Routes', () => {
 
       const recordStillExists = await HabitRecord.findById(record._id);
       expect(recordStillExists).not.toBeNull();
+    });
+  });
+
+  describe('XP Award/Deduct', () => {
+    test('should award XP when creating a completed record', async () => {
+      const habit = await Habit.create({
+        userId: testUser._id,
+        name: 'XP Habit',
+        xpReward: 50
+      });
+
+      const response = await request(app)
+        .post('/api/records')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          habitId: habit._id,
+          date: '2024-01-15',
+          completed: true
+        });
+
+      expect(response.status).toBe(201);
+      expect(response.body.userXp.totalXp).toBe(50);
+    });
+
+    test('should deduct XP when toggling completed to incomplete', async () => {
+      const habit = await Habit.create({
+        userId: testUser._id,
+        name: 'XP Habit',
+        xpReward: 50
+      });
+
+      // First create a completed record to award XP
+      await request(app)
+        .post('/api/records')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          habitId: habit._id,
+          date: '2024-01-15',
+          completed: true
+        });
+
+      // Now toggle it to false
+      const response = await request(app)
+        .post('/api/records')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          habitId: habit._id,
+          date: '2024-01-15',
+          completed: false
+        });
+
+      expect(response.status).toBe(201);
+      expect(response.body.userXp.totalXp).toBe(0);
+    });
+
+    test('should deduct XP when deleting a completed record', async () => {
+      const habit = await Habit.create({
+        userId: testUser._id,
+        name: 'XP Habit',
+        xpReward: 75
+      });
+
+      const createRes = await request(app)
+        .post('/api/records')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          habitId: habit._id,
+          date: '2024-01-15',
+          completed: true
+        });
+
+      expect(createRes.body.userXp.totalXp).toBe(75);
+
+      const response = await request(app)
+        .delete(`/api/records/${createRes.body.record._id}`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.userXp.totalXp).toBe(0);
+    });
+
+    test('should never let XP go below 0', async () => {
+      const habit = await Habit.create({
+        userId: testUser._id,
+        name: 'XP Habit',
+        xpReward: 100
+      });
+
+      // Create and delete without any XP first
+      const createRes = await request(app)
+        .post('/api/records')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          habitId: habit._id,
+          date: '2024-01-15',
+          completed: false
+        });
+
+      // Toggle false->true then delete to try to go negative
+      await request(app)
+        .post('/api/records')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          habitId: habit._id,
+          date: '2024-01-15',
+          completed: true
+        });
+
+      // Delete the record (deducts 100)
+      const delRes = await request(app)
+        .delete(`/api/records/${createRes.body.record._id}`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(delRes.body.userXp.totalXp).toBe(0);
+
+      const user = await User.findById(testUser._id);
+      expect(user.totalXp).toBe(0);
     });
   });
 });

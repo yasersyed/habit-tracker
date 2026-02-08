@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
+import { computeLevelInfo } from '../utils/xp.js';
 
 const userSchema = new mongoose.Schema({
   username: {
@@ -22,6 +23,18 @@ const userSchema = new mongoose.Schema({
     minlength: 6,
     select: false
   },
+  level: {
+    type: Number,
+    default: 1
+  },
+  xp: {
+    type: Number,
+    default: 0
+  },
+  totalXp: {
+    type: Number,
+    default: 0
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -29,6 +42,12 @@ const userSchema = new mongoose.Schema({
 });
 
 userSchema.pre('save', async function(next) {
+  if (this.isModified('totalXp')) {
+    const info = computeLevelInfo(this.totalXp);
+    this.level = info.level;
+    this.xp = info.xp;
+  }
+
   if (!this.isModified('password')) return next();
 
   const salt = await bcrypt.genSalt(10);

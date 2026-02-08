@@ -138,6 +138,25 @@ describe('Habit Model', () => {
     expect(habit.name).toBe('Test Habit');
   });
 
+  test('should use default xpReward of 25', async () => {
+    const habit = await Habit.create({
+      userId: testUser._id,
+      name: 'Test Habit'
+    });
+
+    expect(habit.xpReward).toBe(25);
+  });
+
+  test('should accept custom xpReward', async () => {
+    const habit = await Habit.create({
+      userId: testUser._id,
+      name: 'Hard Habit',
+      xpReward: 100
+    });
+
+    expect(habit.xpReward).toBe(100);
+  });
+
   test('should allow description to be optional', async () => {
     const habit = await Habit.create({
       userId: testUser._id,

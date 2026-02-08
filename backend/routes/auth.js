@@ -46,7 +46,10 @@ router.post('/register', async (req, res) => {
       user: {
         _id: user._id,
         username: user.username,
-        email: user.email
+        email: user.email,
+        level: user.level,
+        xp: user.xp,
+        totalXp: user.totalXp
       }
     });
   } catch (error) {
@@ -82,7 +85,10 @@ router.post('/login', async (req, res) => {
       user: {
         _id: user._id,
         username: user.username,
-        email: user.email
+        email: user.email,
+        level: user.level,
+        xp: user.xp,
+        totalXp: user.totalXp
       }
     });
   } catch (error) {
@@ -110,7 +116,10 @@ router.get('/me', async (req, res) => {
     res.json({
       _id: user._id,
       username: user.username,
-      email: user.email
+      email: user.email,
+      level: user.level,
+      xp: user.xp,
+      totalXp: user.totalXp
     });
   } catch (error) {
     res.status(401).json({ message: 'Invalid token' });
