@@ -215,6 +215,41 @@ Authorization: Bearer <token>
 - All habit and record endpoints are protected
 - Users can only access their own data
 
+## Kubernetes Deployment
+
+The application includes Kubernetes manifests using Kustomize with base + overlay structure.
+
+### Build Docker Images
+
+```bash
+docker build -t habit-tracker-backend ./backend
+docker build -t habit-tracker-frontend ./frontend
+```
+
+### Deploy to Dev (NodePort)
+
+```bash
+kubectl apply -k kube/overlays/dev/
+```
+
+Access the app at `http://<node-ip>:30080`.
+
+### Deploy to Prod (LoadBalancer)
+
+```bash
+kubectl apply -k kube/overlays/prod/
+```
+
+### Verify Deployment
+
+```bash
+kubectl get all -n habit-tracker
+```
+
+### Secrets
+
+Update `kube/base/secrets.yaml` with production credentials before deploying. The default values are placeholders only.
+
 ## Production Deployment Prerequisites
 
 - **CORS Configuration**: The backend currently uses `app.use(cors())` which allows requests from any origin. Before deploying to production, configure `cors()` with a specific `origin` allowlist to restrict access to trusted domains only.
@@ -228,7 +263,7 @@ Authorization: Bearer <token>
 ### Bugs & Tech Debt (Priority)
 
 - [x] **`.env` in `.gitignore`** — Already handled
-- [ ] **MongoDB has no authentication** — Add credentials to the Docker Compose config and connection string
+- [x] **MongoDB has no authentication** — Add credentials to the Docker Compose config and connection string
 - [ ] **CORS wide open** — Restrict `cors()` to specific allowed origins
 - [ ] **No rate limiting on auth** — Add rate limiting middleware to login/register endpoints
 - [ ] **Toggle logic bug** — Dashboard creates/deletes records to toggle, but POST route has dead code for toggling `completed` flag. Pick one approach and remove the other
@@ -239,7 +274,7 @@ Authorization: Bearer <token>
 - [ ] **`/api/auth/me` bypasses auth middleware** — Has inline JWT verification instead of using the shared middleware
 - [ ] **No input validation/sanitization** — No protection against NoSQL injection; add express-validator or similar
 - [ ] **No React error boundary** — Unhandled errors white-screen the app
-- [ ] **No production Docker setup** — No Dockerfiles for backend/frontend, no nginx config
+- [x] **No production Docker setup** — No Dockerfiles for backend/frontend, no nginx config
 - [ ] **No structured logging** — Only `console.log/error`
 - [ ] **No pagination** — List endpoints will degrade with large datasets
 
