@@ -1,5 +1,7 @@
 import express from 'express';
 import Habit from '../models/Habit.js';
+import HabitRecord from '../models/HabitRecord.js';
+import User from '../models/User.js';
 import authMiddleware from '../middleware/auth.js';
 
 const router = express.Router();
@@ -75,7 +77,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Delete habit (verify ownership)
+// Delete habit (verify ownership) — cascades to records and reclaims XP
 router.delete('/:id', async (req, res) => {
   try {
     const habit = await Habit.findOne({
@@ -86,8 +88,26 @@ router.delete('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Habit not found' });
     }
 
+    // Reclaim XP from completed records
+    const completedCount = await HabitRecord.countDocuments({
+      habitId: habit._id,
+      completed: true
+    });
+
+    if (completedCount > 0) {
+      const user = await User.findById(req.user._id);
+      user.totalXp = Math.max(0, user.totalXp - completedCount * (habit.xpReward || 0));
+      await user.save();
+    }
+
+    // Delete all records for this habit
+    await HabitRecord.deleteMany({ habitId: habit._id });
+
     await habit.deleteOne();
-    res.json({ message: 'Habit deleted' });
+
+    const user = await User.findById(req.user._id);
+    const userXp = { level: user.level, xp: user.xp, totalXp: user.totalXp };
+    res.json({ message: 'Habit deleted', userXp });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

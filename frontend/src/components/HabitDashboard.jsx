@@ -67,10 +67,14 @@ function HabitDashboard() {
   };
 
   const handleDeleteHabit = async (habitId) => {
-    if (window.confirm('Are you sure you want to delete this habit?')) {
+    if (window.confirm('Are you sure you want to delete this habit? All records will be removed and earned XP will be reclaimed.')) {
       try {
-        await habitAPI.delete(habitId);
+        const response = await habitAPI.delete(habitId);
+        if (response.data.userXp) {
+          setUserXp(response.data.userXp);
+        }
         loadHabits();
+        loadTodayRecords();
       } catch (error) {
         console.error('Error deleting habit:', error);
       }
