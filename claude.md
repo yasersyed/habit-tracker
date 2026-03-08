@@ -119,7 +119,7 @@ habit-tracker/
 - `GET /:id` - Get habit by ID
 - `POST /` - Create habit (body: {userId, name, description?, frequency?, color?})
 - `PUT /:id` - Update habit
-- `DELETE /:id` - Delete habit
+- `DELETE /:id` - Delete habit (cascades to records, reclaims XP)
 
 ### Habit Records (`/api/records`)
 - `GET /habit/:habitId` - Get all records for a habit
@@ -170,6 +170,7 @@ PORT=5000
 - [x] Preset habit templates (15 templates with built-in XP values)
 - [x] Protected routes with auth middleware
 - [x] Comprehensive backend test suite
+- [x] Cascading habit deletion (removes records, reclaims XP)
 
 ## Frontend To-Do
 

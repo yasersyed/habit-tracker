@@ -161,7 +161,7 @@ For more details, see [backend/__tests__/README.md](backend/__tests__/README.md)
 - `GET /api/habits/:id` - Get habit by ID
 - `POST /api/habits` - Create new habit
 - `PUT /api/habits/:id` - Update habit
-- `DELETE /api/habits/:id` - Delete habit
+- `DELETE /api/habits/:id` - Delete habit (cascades to records, reclaims XP)
 
 ### Habit Records (Protected)
 - `GET /api/records` - Get all records for authenticated user
@@ -267,7 +267,7 @@ Update `kube/base/secrets.yaml` with production credentials before deploying. Th
 - [ ] **CORS wide open** — Restrict `cors()` to specific allowed origins
 - [ ] **No rate limiting on auth** — Add rate limiting middleware to login/register endpoints
 - [ ] **Toggle logic bug** — Dashboard creates/deletes records to toggle, but POST route has dead code for toggling `completed` flag. Pick one approach and remove the other
-- [ ] **Habit deletion doesn't cascade** — Deleting a habit leaves orphaned `HabitRecord` documents and doesn't reclaim their XP
+- [x] **Habit deletion doesn't cascade** — Deleting a habit leaves orphaned `HabitRecord` documents and doesn't reclaim their XP
 - [ ] **Fragile date handling** — `loadTodayRecords` uses `Date.now() + 86400000` which breaks on DST transitions; frontend sends local date strings but backend normalizes to UTC midnight
 - [ ] **Duplicated `xpForLevel()`** — Exists in both `backend/utils/xp.js` and `frontend/src/components/HabitDashboard.jsx`; extract to a shared module
 - [ ] **Duplicated `presetHabits.js`** — Identical files in frontend and backend `data/` dirs; backend copy is unused
