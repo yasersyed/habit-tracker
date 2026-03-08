@@ -3,6 +3,7 @@ import request from 'supertest';
 import express from 'express';
 import habitRoutes from '../../routes/habits.js';
 import Habit from '../../models/Habit.js';
+import HabitRecord from '../../models/HabitRecord.js';
 import User from '../../models/User.js';
 import { setupTestDB, clearTestDB, teardownTestDB, createAuthenticatedUser } from '../setup.js';
 
@@ -283,7 +284,7 @@ describe('Habit Routes', () => {
   });
 
   describe('DELETE /api/habits/:id', () => {
-    test('should delete a habit', async () => {
+    test('should delete a habit and return userXp', async () => {
       const habit = await Habit.create({
         userId: testUser._id,
         name: 'Test Habit'
@@ -295,9 +296,107 @@ describe('Habit Routes', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.message).toBe('Habit deleted');
+      expect(response.body.userXp).toBeDefined();
+      expect(response.body.userXp.level).toBeDefined();
+      expect(response.body.userXp.xp).toBeDefined();
+      expect(response.body.userXp.totalXp).toBeDefined();
 
       const deletedHabit = await Habit.findById(habit._id);
       expect(deletedHabit).toBeNull();
+    });
+
+    test('should cascade delete all habit records', async () => {
+      const habit = await Habit.create({
+        userId: testUser._id,
+        name: 'Test Habit',
+        xpReward: 10
+      });
+
+      await HabitRecord.create([
+        { habitId: habit._id, userId: testUser._id, date: new Date('2025-01-01'), completed: true },
+        { habitId: habit._id, userId: testUser._id, date: new Date('2025-01-02'), completed: true },
+        { habitId: habit._id, userId: testUser._id, date: new Date('2025-01-03'), completed: false }
+      ]);
+
+      const response = await request(app)
+        .delete(`/api/habits/${habit._id}`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+
+      const remainingRecords = await HabitRecord.find({ habitId: habit._id });
+      expect(remainingRecords).toHaveLength(0);
+    });
+
+    test('should reclaim XP from completed records', async () => {
+      // Give user some XP first
+      testUser.totalXp = 50;
+      await testUser.save();
+
+      const habit = await Habit.create({
+        userId: testUser._id,
+        name: 'Test Habit',
+        xpReward: 10
+      });
+
+      await HabitRecord.create([
+        { habitId: habit._id, userId: testUser._id, date: new Date('2025-01-01'), completed: true },
+        { habitId: habit._id, userId: testUser._id, date: new Date('2025-01-02'), completed: true }
+      ]);
+
+      const response = await request(app)
+        .delete(`/api/habits/${habit._id}`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.userXp.totalXp).toBe(30); // 50 - (2 * 10)
+    });
+
+    test('should only deduct XP for completed records, not incomplete ones', async () => {
+      testUser.totalXp = 50;
+      await testUser.save();
+
+      const habit = await Habit.create({
+        userId: testUser._id,
+        name: 'Test Habit',
+        xpReward: 10
+      });
+
+      await HabitRecord.create([
+        { habitId: habit._id, userId: testUser._id, date: new Date('2025-01-01'), completed: true },
+        { habitId: habit._id, userId: testUser._id, date: new Date('2025-01-02'), completed: false },
+        { habitId: habit._id, userId: testUser._id, date: new Date('2025-01-03'), completed: false }
+      ]);
+
+      const response = await request(app)
+        .delete(`/api/habits/${habit._id}`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.userXp.totalXp).toBe(40); // 50 - (1 * 10)
+    });
+
+    test('should clamp XP to 0 (never go negative)', async () => {
+      testUser.totalXp = 5;
+      await testUser.save();
+
+      const habit = await Habit.create({
+        userId: testUser._id,
+        name: 'Test Habit',
+        xpReward: 10
+      });
+
+      await HabitRecord.create([
+        { habitId: habit._id, userId: testUser._id, date: new Date('2025-01-01'), completed: true },
+        { habitId: habit._id, userId: testUser._id, date: new Date('2025-01-02'), completed: true }
+      ]);
+
+      const response = await request(app)
+        .delete(`/api/habits/${habit._id}`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.userXp.totalXp).toBe(0); // clamped, not -15
     });
 
     test('should return 404 for non-existent habit', async () => {
