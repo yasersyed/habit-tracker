@@ -252,7 +252,7 @@ Update `kube/base/secrets.yaml` with production credentials before deploying. Th
 
 ## Production Deployment Prerequisites
 
-- **CORS Configuration**: The backend currently uses `app.use(cors())` which allows requests from any origin. Before deploying to production, configure `cors()` with a specific `origin` allowlist to restrict access to trusted domains only.
+- **CORS Configuration**: The backend restricts origins via the `CORS_ORIGINS` environment variable (comma-separated list). It defaults to `http://localhost:5173` when unset. Set this to your production domain(s) before deploying.
 - **Vite Proxy Replacement**: The Vite dev server proxy (`/api` → `localhost:5000`) only works in development. In production, either serve the frontend from the same origin as the backend (e.g. behind a reverse proxy like Nginx) or configure the frontend to call the backend URL directly with proper CORS headers.
 - **JWT Secret**: Replace the default `JWT_SECRET` in `.env` with a strong, randomly generated secret.
 - **HTTPS**: Serve all traffic over HTTPS to protect JWT tokens and credentials in transit.
@@ -264,7 +264,7 @@ Update `kube/base/secrets.yaml` with production credentials before deploying. Th
 
 - [x] **`.env` in `.gitignore`** — Already handled
 - [x] **MongoDB has no authentication** — Add credentials to the Docker Compose config and connection string
-- [ ] **CORS wide open** — Restrict `cors()` to specific allowed origins
+- [x] **CORS wide open** — Restrict `cors()` to specific allowed origins
 - [ ] **No rate limiting on auth** — Add rate limiting middleware to login/register endpoints
 - [ ] **Toggle logic bug** — Dashboard creates/deletes records to toggle, but POST route has dead code for toggling `completed` flag. Pick one approach and remove the other
 - [x] **Habit deletion doesn't cascade** — Deleting a habit leaves orphaned `HabitRecord` documents and doesn't reclaim their XP
@@ -281,6 +281,7 @@ Update `kube/base/secrets.yaml` with production credentials before deploying. Th
 ### Frontend To-Do
 
 - [ ] **Habit Streaks UI** - Display current and best streak counts on each habit card
+- [x] **Completion Heatmap** - GitHub-style activity heatmap showing daily completions with summary stats (today, streak, active days, total)
 - [ ] **Calendar View** - Calendar component showing completion history for habits
 - [ ] **Statistics / Charts** - Visual progress charts (weekly/monthly completion rates, XP over time)
 - [ ] **Habit Categories & Tags** - Organize habits with categories/tags and filter by them
@@ -290,6 +291,11 @@ Update `kube/base/secrets.yaml` with production credentials before deploying. Th
 - [ ] **Data Export UI** - Button to export habit data as CSV or JSON
 - [ ] **Edit Habit** - UI for editing an existing habit (name, frequency, color, difficulty)
 - [ ] **User Profile Page** - View/edit profile info and see overall stats
+- [ ] **Level-Up Animation** - Animated graphic/overlay when user reaches a new level
+- [ ] **Toast Notifications** - Add `react-hot-toast` for success/error feedback on habit actions
+- [ ] **Animations** - Add `framer-motion` for UI transitions (card entries, level-up effects)
+- [ ] **Charts Library** - Add `recharts` for statistics/charts feature
+- [ ] **Date Utilities** - Add `date-fns` for calendar view and reliable date handling
 
 ### Backend To-Do
 
