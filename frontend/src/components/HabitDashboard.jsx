@@ -3,6 +3,7 @@ import { habitAPI, recordAPI, userAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import HabitForm from './HabitForm';
 import HabitCard from './HabitCard';
+import CompletionHeatmap from './CompletionHeatmap';
 import './HabitDashboard.css';
 
 function xpForLevel(level) {
@@ -125,6 +126,8 @@ function HabitDashboard() {
           <div className="xp-bar-fill" style={{ width: `${xpPercent}%` }} />
         </div>
       </div>
+
+      <CompletionHeatmap key={records.length} />
 
       <div className="dashboard-header">
         <h2>Welcome, {user?.username}!</h2>

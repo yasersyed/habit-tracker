@@ -159,7 +159,7 @@ PORT=5000
 
 - **Date Handling**: HabitRecord dates are normalized to midnight UTC to ensure one record per day
 - **Unique Constraints**: Username and email must be unique; one habit record per habit per day
-- **CORS**: Backend allows all origins in development
+- **CORS**: Backend restricts origins via `CORS_ORIGINS` env var (comma-separated); defaults to `http://localhost:5173`
 - **API Proxy**: Vite proxies `/api` requests to avoid CORS issues in development
 - **ES Modules**: Backend uses `"type": "module"` in package.json
 

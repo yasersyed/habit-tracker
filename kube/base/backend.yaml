@@ -63,6 +63,11 @@ spec:
                 configMapKeyRef:
                   name: habit-tracker-config
                   key: JWT_EXPIRES_IN
+            - name: CORS_ORIGINS
+              valueFrom:
+                configMapKeyRef:
+                  name: habit-tracker-config
+                  key: CORS_ORIGINS
           readinessProbe:
             httpGet:
               path: /api/health
