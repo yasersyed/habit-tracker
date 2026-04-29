@@ -1,9 +1,11 @@
 import { describe, test, expect, beforeAll, afterEach, afterAll } from '@jest/globals';
 import request from 'supertest';
 import express from 'express';
-import authRoutes from '../../routes/auth.js';
 import User from '../../models/User.js';
 import { setupTestDB, clearTestDB, teardownTestDB, generateAuthToken } from '../setup.js';
+
+// Dynamic import so setup.js env vars (REGISTER_RATE_MAX=1000) are set first
+const { default: authRoutes } = await import('../../routes/auth.js');
 
 const app = express();
 app.use(express.json());

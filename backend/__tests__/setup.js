@@ -9,6 +9,10 @@ let mongoServer;
 process.env.JWT_SECRET = 'test-jwt-secret';
 process.env.JWT_EXPIRES_IN = '7d';
 
+// Raise rate limits so they don't interfere with functional tests
+process.env.LOGIN_RATE_MAX = '1000';
+process.env.REGISTER_RATE_MAX = '1000';
+
 // Connect to in-memory database before all tests
 export const setupTestDB = async () => {
   mongoServer = await MongoMemoryServer.create();

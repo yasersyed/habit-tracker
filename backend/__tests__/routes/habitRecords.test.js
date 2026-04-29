@@ -264,6 +264,48 @@ describe('HabitRecord Routes', () => {
       expect(recordDate.getUTCSeconds()).toBe(0);
     });
 
+    test('should store YYYY-MM-DD local date strings at UTC midnight', async () => {
+      // The frontend sends bare "YYYY-MM-DD" strings (local date).
+      // These must be stored as UTC midnight so range queries match.
+      const response = await request(app)
+        .post('/api/records')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          habitId: testHabit._id,
+          date: '2024-03-10', // DST transition date in US
+          completed: true
+        });
+
+      expect(response.status).toBe(201);
+
+      const record = await HabitRecord.findById(response.body.record._id);
+      const recordDate = new Date(record.date);
+      expect(recordDate.toISOString()).toBe('2024-03-10T00:00:00.000Z');
+    });
+
+    test('should find record via range query using YYYY-MM-DD boundaries', async () => {
+      // Create a record with a bare date string
+      await request(app)
+        .post('/api/records')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          habitId: testHabit._id,
+          date: '2024-03-10',
+          completed: true
+        });
+
+      // Query the range the same way the frontend does:
+      // startDate = today, endDate = tomorrow
+      const response = await request(app)
+        .get('/api/records/range')
+        .query({ startDate: '2024-03-10', endDate: '2024-03-11' })
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveLength(1);
+      expect(new Date(response.body[0].date).toISOString()).toBe('2024-03-10T00:00:00.000Z');
+    });
+
     test('should return 400 for missing required fields', async () => {
       const response = await request(app)
         .post('/api/records')

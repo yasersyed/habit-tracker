@@ -5,19 +5,18 @@ import User from '../models/User.js';
 
 const router = express.Router();
 
-// Strict rate limit for login — 10 attempts per 15 minutes per IP
+// Rate limits are configurable via env vars for testing/tuning
 const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
+  windowMs: parseInt(process.env.LOGIN_RATE_WINDOW_MS, 10) || 15 * 60 * 1000,
+  max: parseInt(process.env.LOGIN_RATE_MAX, 10) || 10,
   message: { message: 'Too many login attempts, please try again after 15 minutes' },
   standardHeaders: true,
   legacyHeaders: false,
 });
 
-// Moderate rate limit for registration — 5 accounts per hour per IP
 const registerLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000,
-  max: 5,
+  windowMs: parseInt(process.env.REGISTER_RATE_WINDOW_MS, 10) || 60 * 60 * 1000,
+  max: parseInt(process.env.REGISTER_RATE_MAX, 10) || 5,
   message: { message: 'Too many accounts created from this IP, please try again after an hour' },
   standardHeaders: true,
   legacyHeaders: false,
