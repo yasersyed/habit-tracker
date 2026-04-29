@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { habitAPI, recordAPI, userAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { localDateString, localTomorrowString } from '../utils/date';
 import HabitForm from './HabitForm';
 import HabitCard from './HabitCard';
 import CompletionHeatmap from './CompletionHeatmap';
@@ -47,8 +48,8 @@ function HabitDashboard() {
 
   const loadTodayRecords = async () => {
     try {
-      const today = new Date().toISOString().split('T')[0];
-      const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+      const today = localDateString();
+      const tomorrow = localTomorrowString();
       const response = await recordAPI.getByRange(today, tomorrow);
       setRecords(response.data);
     } catch (error) {
@@ -84,7 +85,7 @@ function HabitDashboard() {
 
   const handleToggleHabit = async (habitId) => {
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = localDateString();
       const existingRecord = records.find(r => r.habitId._id === habitId);
 
       let response;

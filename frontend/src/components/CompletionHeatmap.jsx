@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { recordAPI } from '../services/api';
+import { localDateString } from '../utils/date';
 import './CompletionHeatmap.css';
 
 const WEEKS_TO_SHOW = 15;
@@ -26,7 +27,7 @@ function buildDateGrid() {
 }
 
 function dateKey(d) {
-  return d.toISOString().split('T')[0];
+  return localDateString(d);
 }
 
 function getIntensity(count, max) {
@@ -87,13 +88,15 @@ function CompletionHeatmap() {
   const loadRecords = async () => {
     try {
       const startDate = dateKey(dates[0]);
-      const endDate = dateKey(new Date(dates[dates.length - 1].getTime() + 86400000));
+      const endOfGrid = new Date(dates[dates.length - 1]);
+      endOfGrid.setDate(endOfGrid.getDate() + 1);
+      const endDate = dateKey(endOfGrid);
       const response = await recordAPI.getByRange(startDate, endDate);
 
       const counts = {};
       for (const record of response.data) {
         if (record.completed) {
-          const key = new Date(record.date).toISOString().split('T')[0];
+          const key = localDateString(new Date(record.date));
           counts[key] = (counts[key] || 0) + 1;
         }
       }
