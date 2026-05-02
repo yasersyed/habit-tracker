@@ -210,6 +210,24 @@ describe('Auth Routes', () => {
       expect(response.status).toBe(401);
       expect(response.body.message).toBe('Invalid credentials');
     });
+
+    test('should reject NoSQL injection in email field', async () => {
+      await User.create({
+        username: 'testuser',
+        email: 'test@example.com',
+        password: 'password123'
+      });
+
+      const response = await request(app)
+        .post('/api/auth/login')
+        .send({
+          email: { $ne: null },
+          password: { $ne: null }
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.token).toBeUndefined();
+    });
   });
 
   describe('GET /api/auth/me', () => {
@@ -236,7 +254,7 @@ describe('Auth Routes', () => {
       const response = await request(app).get('/api/auth/me');
 
       expect(response.status).toBe(401);
-      expect(response.body.message).toBe('No token provided');
+      expect(response.body.message).toBe('No token provided, authorization denied');
     });
 
     test('should return 401 with invalid token', async () => {
@@ -248,7 +266,7 @@ describe('Auth Routes', () => {
       expect(response.body.message).toBe('Invalid token');
     });
 
-    test('should return 404 for deleted user token', async () => {
+    test('should return 401 for deleted user token', async () => {
       const user = await User.create({
         username: 'testuser',
         email: 'test@example.com',
@@ -263,7 +281,7 @@ describe('Auth Routes', () => {
         .get('/api/auth/me')
         .set('Authorization', `Bearer ${token}`);
 
-      expect(response.status).toBe(404);
+      expect(response.status).toBe(401);
       expect(response.body.message).toBe('User not found');
     });
   });

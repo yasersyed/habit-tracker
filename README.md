@@ -269,10 +269,10 @@ Update `kube/base/secrets.yaml` with production credentials before deploying. Th
 - [ ] **Toggle logic bug** — Dashboard creates/deletes records to toggle, but POST route has dead code for toggling `completed` flag. Pick one approach and remove the other
 - [x] **Habit deletion doesn't cascade** — Deleting a habit leaves orphaned `HabitRecord` documents and doesn't reclaim their XP
 - [x] **Fragile date handling** — `loadTodayRecords` uses `Date.now() + 86400000` which breaks on DST transitions; frontend sends local date strings but backend normalizes to UTC midnight
-- [ ] **Duplicated `xpForLevel()`** — Exists in both `backend/utils/xp.js` and `frontend/src/components/HabitDashboard.jsx`; extract to a shared module
-- [ ] **Duplicated `presetHabits.js`** — Identical files in frontend and backend `data/` dirs; backend copy is unused
-- [ ] **`/api/auth/me` bypasses auth middleware** — Has inline JWT verification instead of using the shared middleware
-- [ ] **No input validation/sanitization** — No protection against NoSQL injection; add express-validator or similar
+- [x] **Duplicated `xpForLevel()`** — Exists in both `backend/utils/xp.js` and `frontend/src/components/HabitDashboard.jsx`; extract to a shared module
+- [x] **Duplicated `presetHabits.js`** — Identical files in frontend and backend `data/` dirs; backend copy is unused
+- [x] **`/api/auth/me` bypasses auth middleware** — Has inline JWT verification instead of using the shared middleware
+- [x] **No input validation/sanitization** — No protection against NoSQL injection; add express-validator or similar
 - [ ] **No React error boundary** — Unhandled errors white-screen the app
 - [x] **No production Docker setup** — No Dockerfiles for backend/frontend, no nginx config
 - [ ] **No structured logging** — Only `console.log/error`

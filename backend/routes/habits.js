@@ -1,12 +1,25 @@
 import express from 'express';
+import { body, param } from 'express-validator';
 import Habit from '../models/Habit.js';
 import HabitRecord from '../models/HabitRecord.js';
 import User from '../models/User.js';
 import authMiddleware from '../middleware/auth.js';
+import runValidation from '../middleware/validate.js';
 
 const router = express.Router();
 
 router.use(authMiddleware);
+
+const idParam = [param('id').isMongoId().withMessage('Invalid habit id'), runValidation];
+
+const habitBodyValidators = [
+  body('name').optional().isString().withMessage('Invalid name'),
+  body('description').optional().isString().withMessage('Invalid description'),
+  body('frequency').optional().isIn(['daily', 'weekly', 'monthly']).withMessage('Invalid frequency'),
+  body('color').optional().isString().withMessage('Invalid color'),
+  body('xpReward').optional().isInt({ min: 0 }).withMessage('Invalid xpReward'),
+  runValidation
+];
 
 // Get all habits for authenticated user
 router.get('/', async (req, res) => {
@@ -19,7 +32,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get habit by ID (verify ownership)
-router.get('/:id', async (req, res) => {
+router.get('/:id', idParam, async (req, res) => {
   try {
     const habit = await Habit.findOne({
       _id: req.params.id,
@@ -35,7 +48,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create new habit
-router.post('/', async (req, res) => {
+router.post('/', habitBodyValidators, async (req, res) => {
   const habit = new Habit({
     userId: req.user._id,
     name: req.body.name,
@@ -54,7 +67,7 @@ router.post('/', async (req, res) => {
 });
 
 // Update habit (verify ownership)
-router.put('/:id', async (req, res) => {
+router.put('/:id', idParam, habitBodyValidators, async (req, res) => {
   try {
     const habit = await Habit.findOne({
       _id: req.params.id,
@@ -78,7 +91,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete habit (verify ownership) — cascades to records and reclaims XP
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', idParam, async (req, res) => {
   try {
     const habit = await Habit.findOne({
       _id: req.params.id,

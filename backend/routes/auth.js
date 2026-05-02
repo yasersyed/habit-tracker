@@ -1,7 +1,10 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import rateLimit from 'express-rate-limit';
+import { body } from 'express-validator';
 import User from '../models/User.js';
+import authMiddleware from '../middleware/auth.js';
+import runValidation from '../middleware/validate.js';
 
 const router = express.Router();
 
@@ -30,8 +33,21 @@ const generateToken = (userId) => {
   );
 };
 
+const registerValidators = [
+  body('username').optional().isString().withMessage('Invalid username'),
+  body('email').optional().isString().withMessage('Invalid email'),
+  body('password').optional().isString().withMessage('Invalid password'),
+  runValidation
+];
+
+const loginValidators = [
+  body('email').optional().isString().withMessage('Invalid email'),
+  body('password').optional().isString().withMessage('Invalid password'),
+  runValidation
+];
+
 // POST /api/auth/register
-router.post('/register', registerLimiter, async (req, res) => {
+router.post('/register', registerLimiter, registerValidators, async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
@@ -76,7 +92,7 @@ router.post('/register', registerLimiter, async (req, res) => {
 });
 
 // POST /api/auth/login
-router.post('/login', loginLimiter, async (req, res) => {
+router.post('/login', loginLimiter, loginValidators, async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -115,33 +131,16 @@ router.post('/login', loginLimiter, async (req, res) => {
 });
 
 // GET /api/auth/me
-router.get('/me', async (req, res) => {
-  try {
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ message: 'No token provided' });
-    }
-
-    const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.userId);
-
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    res.json({
-      _id: user._id,
-      username: user.username,
-      email: user.email,
-      level: user.level,
-      xp: user.xp,
-      totalXp: user.totalXp
-    });
-  } catch (error) {
-    res.status(401).json({ message: 'Invalid token' });
-  }
+router.get('/me', authMiddleware, (req, res) => {
+  const user = req.user;
+  res.json({
+    _id: user._id,
+    username: user.username,
+    email: user.email,
+    level: user.level,
+    xp: user.xp,
+    totalXp: user.totalXp
+  });
 });
 
 export default router;
