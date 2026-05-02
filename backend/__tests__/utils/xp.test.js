@@ -1,5 +1,5 @@
 import { describe, test, expect } from '@jest/globals';
-import { xpForLevel, computeLevelInfo } from '../../utils/xp.js';
+import { xpForLevel, computeLevelInfo } from '../../../shared/xp.js';
 
 describe('XP Utilities', () => {
   describe('xpForLevel', () => {

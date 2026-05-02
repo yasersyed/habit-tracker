@@ -2,17 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { habitAPI, recordAPI, userAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { localDateString, localTomorrowString } from '../utils/date';
+import { xpForLevel } from '../../../shared/xp.js';
 import HabitForm from './HabitForm';
 import HabitCard from './HabitCard';
 import CompletionHeatmap from './CompletionHeatmap';
 import './HabitDashboard.css';
-
-function xpForLevel(level) {
-  if (level <= 10) return 100;
-  if (level <= 20) return 250;
-  if (level <= 30) return 500;
-  return 1000;
-}
 
 function HabitDashboard() {
   const [habits, setHabits] = useState([]);

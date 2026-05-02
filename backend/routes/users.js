@@ -1,8 +1,15 @@
 import express from 'express';
+import { body } from 'express-validator';
 import User from '../models/User.js';
 import authMiddleware from '../middleware/auth.js';
+import runValidation from '../middleware/validate.js';
 
 const router = express.Router();
+
+const updateMeValidators = [
+  body('username').optional().isString().withMessage('Invalid username'),
+  runValidation
+];
 
 // Get current user's profile (protected)
 router.get('/me', authMiddleware, async (req, res) => {
@@ -21,7 +28,7 @@ router.get('/me', authMiddleware, async (req, res) => {
 });
 
 // Update current user's profile (protected)
-router.put('/me', authMiddleware, async (req, res) => {
+router.put('/me', authMiddleware, updateMeValidators, async (req, res) => {
   try {
     const user = req.user;
 

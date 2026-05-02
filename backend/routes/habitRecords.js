@@ -1,12 +1,31 @@
 import express from 'express';
+import { body, param, query } from 'express-validator';
 import HabitRecord from '../models/HabitRecord.js';
 import Habit from '../models/Habit.js';
 import User from '../models/User.js';
 import authMiddleware from '../middleware/auth.js';
+import runValidation from '../middleware/validate.js';
 
 const router = express.Router();
 
 router.use(authMiddleware);
+
+const recordIdParam = [param('id').isMongoId().withMessage('Invalid record id'), runValidation];
+const habitIdParam = [param('habitId').isMongoId().withMessage('Invalid habit id'), runValidation];
+
+const rangeQueryValidators = [
+  query('startDate').isISO8601().withMessage('Invalid startDate'),
+  query('endDate').isISO8601().withMessage('Invalid endDate'),
+  runValidation
+];
+
+const recordBodyValidators = [
+  body('habitId').isMongoId().withMessage('Invalid habitId'),
+  body('date').isISO8601().withMessage('Invalid date'),
+  body('completed').optional().isBoolean().withMessage('Invalid completed'),
+  body('notes').optional().isString().withMessage('Invalid notes'),
+  runValidation
+];
 
 async function getUserXpInfo(userId) {
   const user = await User.findById(userId);
@@ -14,7 +33,7 @@ async function getUserXpInfo(userId) {
 }
 
 // Get all records for a habit (verify ownership)
-router.get('/habit/:habitId', async (req, res) => {
+router.get('/habit/:habitId', habitIdParam, async (req, res) => {
   try {
     const records = await HabitRecord.find({
       habitId: req.params.habitId,
@@ -39,7 +58,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get records for a specific date range
-router.get('/range', async (req, res) => {
+router.get('/range', rangeQueryValidators, async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
     const records = await HabitRecord.find({
@@ -56,7 +75,7 @@ router.get('/range', async (req, res) => {
 });
 
 // Create or update habit record
-router.post('/', async (req, res) => {
+router.post('/', recordBodyValidators, async (req, res) => {
   try {
     const { habitId, date, completed, notes } = req.body;
 
@@ -119,7 +138,7 @@ router.post('/', async (req, res) => {
 });
 
 // Delete habit record (verify ownership)
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', recordIdParam, async (req, res) => {
   try {
     const record = await HabitRecord.findOne({
       _id: req.params.id,

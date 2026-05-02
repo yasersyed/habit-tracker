@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
-import { computeLevelInfo } from '../utils/xp.js';
+import { computeLevelInfo } from '../../shared/xp.js';
 
 const userSchema = new mongoose.Schema({
   username: {
