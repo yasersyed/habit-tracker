@@ -48,25 +48,25 @@ router.get(
   '/habit/:habitId',
   habitListQueryValidators,
   async (req, res) => {
-  try {
-    const filter = {
-      habitId: req.params.habitId,
-      userId: req.user._id
-    };
-    const { page, limit, skip } = parsePaginationQuery(req);
-    const [total, records] = await Promise.all([
-      HabitRecord.countDocuments(filter),
-      HabitRecord.find(filter)
-        .sort({ date: -1, _id: -1 })
-        .skip(skip)
-        .limit(limit)
-    ]);
+    try {
+      const filter = {
+        habitId: req.params.habitId,
+        userId: req.user._id
+      };
+      const { page, limit, skip } = parsePaginationQuery(req);
+      const [total, records] = await Promise.all([
+        HabitRecord.countDocuments(filter),
+        HabitRecord.find(filter)
+          .sort({ date: -1, _id: -1 })
+          .skip(skip)
+          .limit(limit)
+      ]);
 
-    setPaginationHeaders(res, total, page, limit);
-    res.json(records);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+      setPaginationHeaders(res, total, page, limit);
+      res.json(records);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
   }
 );
 
