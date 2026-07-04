@@ -16,6 +16,11 @@ const router = express.Router();
 router.use(authMiddleware);
 
 const recordIdParam = [param('id').isMongoId().withMessage('Invalid record id'), runValidation];
+const habitListQueryValidators = [
+  param('habitId').isMongoId().withMessage('Invalid habit id'),
+  ...paginationQueryValidators,
+  runValidation
+];
 const rangeQueryValidators = [
   query('startDate').isISO8601().withMessage('Invalid startDate'),
   query('endDate').isISO8601().withMessage('Invalid endDate'),
@@ -41,7 +46,7 @@ async function getUserXpInfo(userId) {
 // Get all records for a habit (verify ownership)
 router.get(
   '/habit/:habitId',
-  [param('habitId').isMongoId().withMessage('Invalid habit id'), ...paginationQueryValidators, runValidation],
+  habitListQueryValidators,
   async (req, res) => {
   try {
     const filter = {

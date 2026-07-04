@@ -282,7 +282,7 @@ Update `kube/base/secrets.yaml` with production credentials before deploying. Th
 - [ ] **No React error boundary** — Unhandled errors white-screen the app
 - [x] **No production Docker setup** — No Dockerfiles for backend/frontend, no nginx config
 - [ ] **No structured logging** — Only `console.log/error`
-- [x] **No pagination** — List endpoints will degrade with large datasets
+- [x] **Pagination for list endpoints** — Prevents degradation with large datasets
 
 ### Frontend To-Do
 

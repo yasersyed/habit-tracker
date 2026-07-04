@@ -22,12 +22,13 @@ export function parsePaginationQuery(req) {
 }
 
 export function setPaginationHeaders(res, total, page, limit) {
-  const totalPages = Math.max(1, Math.ceil(total / limit));
+  const safeLimit = limit > 0 ? limit : DEFAULT_LIMIT;
+  const totalPages = Math.max(1, Math.ceil(total / safeLimit));
 
   res.set({
     'X-Total-Count': String(total),
     'X-Page': String(page),
-    'X-Page-Size': String(limit),
+    'X-Page-Size': String(safeLimit),
     'X-Total-Pages': String(totalPages)
   });
 }
