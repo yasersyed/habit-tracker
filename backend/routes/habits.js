@@ -4,6 +4,11 @@ import Habit from '../models/Habit.js';
 import HabitRecord from '../models/HabitRecord.js';
 import User from '../models/User.js';
 import authMiddleware from '../middleware/auth.js';
+import {
+  paginationQueryValidators,
+  parsePaginationQuery,
+  setPaginationHeaders
+} from '../middleware/pagination.js';
 import runValidation from '../middleware/validate.js';
 
 const router = express.Router();
@@ -21,10 +26,23 @@ const habitBodyValidators = [
   runValidation
 ];
 
+const listQueryValidators = [...paginationQueryValidators, runValidation];
+
 // Get all habits for authenticated user
-router.get('/', async (req, res) => {
+router.get('/', listQueryValidators, async (req, res) => {
   try {
-    const habits = await Habit.find({ userId: req.user._id });
+    const filter = { userId: req.user._id };
+    const { page, limit, skip } = parsePaginationQuery(req);
+
+    const [total, habits] = await Promise.all([
+      Habit.countDocuments(filter),
+      Habit.find(filter)
+        .sort({ createdAt: -1, _id: -1 })
+        .skip(skip)
+        .limit(limit)
+    ]);
+
+    setPaginationHeaders(res, total, page, limit);
     res.json(habits);
   } catch (error) {
     res.status(500).json({ message: error.message });

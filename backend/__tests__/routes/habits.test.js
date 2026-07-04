@@ -84,6 +84,35 @@ describe('Habit Routes', () => {
 
       expect(response.status).toBe(401);
     });
+
+    test('should support pagination with page and limit query params', async () => {
+      await Habit.create([
+        { userId: testUser._id, name: 'Habit 1' },
+        { userId: testUser._id, name: 'Habit 2' },
+        { userId: testUser._id, name: 'Habit 3' }
+      ]);
+
+      const response = await request(app)
+        .get('/api/habits')
+        .query({ page: 2, limit: 2 })
+        .set('Authorization', ['Bearer', authToken].join(' '));
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveLength(1);
+      expect(response.headers['x-total-count']).toBe('3');
+      expect(response.headers['x-page']).toBe('2');
+      expect(response.headers['x-page-size']).toBe('2');
+      expect(response.headers['x-total-pages']).toBe('2');
+    });
+
+    test('should return 400 for invalid pagination params', async () => {
+      const response = await request(app)
+        .get('/api/habits')
+        .query({ page: 0, limit: 101 })
+        .set('Authorization', ['Bearer', authToken].join(' '));
+
+      expect(response.status).toBe(400);
+    });
   });
 
   describe('GET /api/habits/:id', () => {
