@@ -157,18 +157,24 @@ For more details, see [backend/__tests__/README.md](backend/__tests__/README.md)
 - `PUT /api/users/me` - Update current user's profile
 
 ### Habits (Protected)
-- `GET /api/habits` - Get all habits for authenticated user
+- `GET /api/habits?page=1&limit=20` - Get paginated habits for authenticated user
 - `GET /api/habits/:id` - Get habit by ID
 - `POST /api/habits` - Create new habit
 - `PUT /api/habits/:id` - Update habit
 - `DELETE /api/habits/:id` - Delete habit (cascades to records, reclaims XP)
 
 ### Habit Records (Protected)
-- `GET /api/records` - Get all records for authenticated user
-- `GET /api/records/habit/:habitId` - Get all records for a habit
-- `GET /api/records/range?startDate=&endDate=` - Get records for date range
+- `GET /api/records?page=1&limit=20` - Get paginated records for authenticated user
+- `GET /api/records/habit/:habitId?page=1&limit=20` - Get paginated records for a habit
+- `GET /api/records/range?startDate=&endDate=&page=1&limit=20` - Get paginated records for date range
 - `POST /api/records` - Create or update habit record
 - `DELETE /api/records/:id` - Delete habit record
+
+Paginated list endpoints return standard pagination headers:
+- `X-Total-Count`: total matching documents
+- `X-Page`: current page
+- `X-Page-Size`: page size
+- `X-Total-Pages`: total page count
 
 All protected routes require a valid JWT token in the Authorization header:
 ```
@@ -276,7 +282,7 @@ Update `kube/base/secrets.yaml` with production credentials before deploying. Th
 - [ ] **No React error boundary** — Unhandled errors white-screen the app
 - [x] **No production Docker setup** — No Dockerfiles for backend/frontend, no nginx config
 - [ ] **No structured logging** — Only `console.log/error`
-- [ ] **No pagination** — List endpoints will degrade with large datasets
+- [x] **No pagination** — List endpoints will degrade with large datasets
 
 ### Frontend To-Do
 

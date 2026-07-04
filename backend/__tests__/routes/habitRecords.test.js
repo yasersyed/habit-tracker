@@ -87,6 +87,26 @@ describe('HabitRecord Routes', () => {
 
       expect(response.status).toBe(401);
     });
+
+    test('should support pagination for habit records', async () => {
+      await HabitRecord.create([
+        { habitId: testHabit._id, userId: testUser._id, date: new Date('2024-01-01') },
+        { habitId: testHabit._id, userId: testUser._id, date: new Date('2024-01-02') },
+        { habitId: testHabit._id, userId: testUser._id, date: new Date('2024-01-03') }
+      ]);
+
+      const response = await request(app)
+        .get(`/api/records/habit/${testHabit._id}`)
+        .query({ page: 2, limit: 2 })
+        .set('Authorization', ['Bearer', authToken].join(' '));
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveLength(1);
+      expect(response.headers['x-total-count']).toBe('3');
+      expect(response.headers['x-page']).toBe('2');
+      expect(response.headers['x-page-size']).toBe('2');
+      expect(response.headers['x-total-pages']).toBe('2');
+    });
   });
 
   describe('GET /api/records', () => {
@@ -123,6 +143,35 @@ describe('HabitRecord Routes', () => {
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(1);
+    });
+
+    test('should support pagination for user records', async () => {
+      await HabitRecord.create([
+        { habitId: testHabit._id, userId: testUser._id, date: new Date('2024-01-01') },
+        { habitId: testHabit._id, userId: testUser._id, date: new Date('2024-01-02') },
+        { habitId: testHabit._id, userId: testUser._id, date: new Date('2024-01-03') }
+      ]);
+
+      const response = await request(app)
+        .get('/api/records')
+        .query({ page: 2, limit: 2 })
+        .set('Authorization', ['Bearer', authToken].join(' '));
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveLength(1);
+      expect(response.headers['x-total-count']).toBe('3');
+      expect(response.headers['x-page']).toBe('2');
+      expect(response.headers['x-page-size']).toBe('2');
+      expect(response.headers['x-total-pages']).toBe('2');
+    });
+
+    test('should return 400 for invalid pagination params', async () => {
+      const response = await request(app)
+        .get('/api/records')
+        .query({ page: 0 })
+        .set('Authorization', ['Bearer', authToken].join(' '));
+
+      expect(response.status).toBe(400);
     });
   });
 
@@ -183,6 +232,35 @@ describe('HabitRecord Routes', () => {
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(1);
+    });
+
+    test('should support pagination for range query', async () => {
+      await HabitRecord.create([
+        { habitId: testHabit._id, userId: testUser._id, date: new Date('2024-01-08') },
+        { habitId: testHabit._id, userId: testUser._id, date: new Date('2024-01-09') },
+        { habitId: testHabit._id, userId: testUser._id, date: new Date('2024-01-10') }
+      ]);
+
+      const response = await request(app)
+        .get('/api/records/range')
+        .query({ startDate: '2024-01-01', endDate: '2024-01-31', page: 2, limit: 2 })
+        .set('Authorization', ['Bearer', authToken].join(' '));
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveLength(1);
+      expect(response.headers['x-total-count']).toBe('3');
+      expect(response.headers['x-page']).toBe('2');
+      expect(response.headers['x-page-size']).toBe('2');
+      expect(response.headers['x-total-pages']).toBe('2');
+    });
+
+    test('should return 400 for invalid range pagination params', async () => {
+      const response = await request(app)
+        .get('/api/records/range')
+        .query({ startDate: '2024-01-01', endDate: '2024-01-31', limit: 999 })
+        .set('Authorization', ['Bearer', authToken].join(' '));
+
+      expect(response.status).toBe(400);
     });
   });
 

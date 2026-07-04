@@ -4,18 +4,24 @@ import HabitRecord from '../models/HabitRecord.js';
 import Habit from '../models/Habit.js';
 import User from '../models/User.js';
 import authMiddleware from '../middleware/auth.js';
+import {
+  paginationQueryValidators,
+  parsePaginationQuery,
+  setPaginationHeaders
+} from '../middleware/pagination.js';
 import runValidation from '../middleware/validate.js';
 
 const router = express.Router();
 
 router.use(authMiddleware);
 
-const recordIdParam = [param('id').isMongoId().withMessage('Invalid record id'), runValidation];
-const habitIdParam = [param('habitId').isMongoId().withMessage('Invalid habit id'), runValidation];
+const recordIdParam = [param('id').isMongoId().withMessage('Invalid record id')];
+const habitIdParam = [param('habitId').isMongoId().withMessage('Invalid habit id')];
 
 const rangeQueryValidators = [
   query('startDate').isISO8601().withMessage('Invalid startDate'),
   query('endDate').isISO8601().withMessage('Invalid endDate'),
+  ...paginationQueryValidators,
   runValidation
 ];
 
@@ -27,18 +33,30 @@ const recordBodyValidators = [
   runValidation
 ];
 
+const listQueryValidators = [...paginationQueryValidators, runValidation];
+
 async function getUserXpInfo(userId) {
   const user = await User.findById(userId);
   return { level: user.level, xp: user.xp, totalXp: user.totalXp };
 }
 
 // Get all records for a habit (verify ownership)
-router.get('/habit/:habitId', habitIdParam, async (req, res) => {
+router.get('/habit/:habitId', [...habitIdParam, ...paginationQueryValidators, runValidation], async (req, res) => {
   try {
-    const records = await HabitRecord.find({
+    const filter = {
       habitId: req.params.habitId,
       userId: req.user._id
-    }).sort({ date: -1 });
+    };
+    const { page, limit, skip } = parsePaginationQuery(req);
+    const [total, records] = await Promise.all([
+      HabitRecord.countDocuments(filter),
+      HabitRecord.find(filter)
+        .sort({ date: -1, _id: -1 })
+        .skip(skip)
+        .limit(limit)
+    ]);
+
+    setPaginationHeaders(res, total, page, limit);
     res.json(records);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -46,11 +64,20 @@ router.get('/habit/:habitId', habitIdParam, async (req, res) => {
 });
 
 // Get all records for authenticated user
-router.get('/', async (req, res) => {
+router.get('/', listQueryValidators, async (req, res) => {
   try {
-    const records = await HabitRecord.find({ userId: req.user._id })
-      .populate('habitId')
-      .sort({ date: -1 });
+    const filter = { userId: req.user._id };
+    const { page, limit, skip } = parsePaginationQuery(req);
+    const [total, records] = await Promise.all([
+      HabitRecord.countDocuments(filter),
+      HabitRecord.find(filter)
+        .populate('habitId')
+        .sort({ date: -1, _id: -1 })
+        .skip(skip)
+        .limit(limit)
+    ]);
+
+    setPaginationHeaders(res, total, page, limit);
     res.json(records);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -61,13 +88,24 @@ router.get('/', async (req, res) => {
 router.get('/range', rangeQueryValidators, async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
-    const records = await HabitRecord.find({
+    const filter = {
       userId: req.user._id,
       date: {
         $gte: new Date(startDate),
         $lte: new Date(endDate)
       }
-    }).populate('habitId');
+    };
+    const { page, limit, skip } = parsePaginationQuery(req);
+    const [total, records] = await Promise.all([
+      HabitRecord.countDocuments(filter),
+      HabitRecord.find(filter)
+        .populate('habitId')
+        .sort({ date: -1, _id: -1 })
+        .skip(skip)
+        .limit(limit)
+    ]);
+
+    setPaginationHeaders(res, total, page, limit);
     res.json(records);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -138,7 +176,7 @@ router.post('/', recordBodyValidators, async (req, res) => {
 });
 
 // Delete habit record (verify ownership)
-router.delete('/:id', recordIdParam, async (req, res) => {
+router.delete('/:id', [...recordIdParam, runValidation], async (req, res) => {
   try {
     const record = await HabitRecord.findOne({
       _id: req.params.id,
