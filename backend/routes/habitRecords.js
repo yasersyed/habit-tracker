@@ -15,9 +15,7 @@ const router = express.Router();
 
 router.use(authMiddleware);
 
-const recordIdParam = [param('id').isMongoId().withMessage('Invalid record id')];
-const habitIdParam = [param('habitId').isMongoId().withMessage('Invalid habit id')];
-
+const recordIdParam = [param('id').isMongoId().withMessage('Invalid record id'), runValidation];
 const rangeQueryValidators = [
   query('startDate').isISO8601().withMessage('Invalid startDate'),
   query('endDate').isISO8601().withMessage('Invalid endDate'),
@@ -41,7 +39,10 @@ async function getUserXpInfo(userId) {
 }
 
 // Get all records for a habit (verify ownership)
-router.get('/habit/:habitId', [...habitIdParam, ...paginationQueryValidators, runValidation], async (req, res) => {
+router.get(
+  '/habit/:habitId',
+  [param('habitId').isMongoId().withMessage('Invalid habit id'), ...paginationQueryValidators, runValidation],
+  async (req, res) => {
   try {
     const filter = {
       habitId: req.params.habitId,
@@ -61,7 +62,8 @@ router.get('/habit/:habitId', [...habitIdParam, ...paginationQueryValidators, ru
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
+  }
+);
 
 // Get all records for authenticated user
 router.get('/', listQueryValidators, async (req, res) => {
@@ -176,7 +178,7 @@ router.post('/', recordBodyValidators, async (req, res) => {
 });
 
 // Delete habit record (verify ownership)
-router.delete('/:id', [...recordIdParam, runValidation], async (req, res) => {
+router.delete('/:id', recordIdParam, async (req, res) => {
   try {
     const record = await HabitRecord.findOne({
       _id: req.params.id,

@@ -22,7 +22,7 @@ export function parsePaginationQuery(req) {
 }
 
 export function setPaginationHeaders(res, total, page, limit) {
-  const totalPages = total === 0 ? 0 : Math.ceil(total / limit);
+  const totalPages = Math.max(1, Math.ceil(total / limit));
 
   res.set({
     'X-Total-Count': String(total),
