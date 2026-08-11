@@ -31,8 +31,8 @@ jobs:
           JWT_EXPIRES_IN: 7d
         run: npm test
 
-  frontend-build:
-    name: Frontend Build
+  frontend-tests:
+    name: Frontend Tests & Build
     runs-on: ubuntu-latest
 
     steps:
@@ -47,6 +47,10 @@ jobs:
       - name: Install dependencies
         working-directory: frontend
         run: npm ci
+
+      - name: Run tests
+        working-directory: frontend
+        run: npm test
 
       - name: Build
         working-directory: frontend
