@@ -33,7 +33,7 @@ habit-tracker/
 ## Prerequisites
 
 - Node.js (v16 or higher)
-- Docker and Docker Compose (for MongoDB)
+- Docker/Podman and Docker Compose (for MongoDB)
   - OR MongoDB installed locally
 
 ## Quick Start with Docker
