@@ -44,25 +44,18 @@ export const habitAPI = {
   getById: (id) => api.get(`/habits/${id}`),
   create: (data) => api.post('/habits', data),
   update: (id, data) => api.put(`/habits/${id}`, data),
-  delete: (id) => api.delete(`/habits/${id}`)
+  delete: (id) => api.delete(`/habits/${id}`),
+  // `today` anchors the current-streak boundary to the client's local day.
+  getStreaks: (today) => api.get(`/habits/streaks?today=${today}`),
+  getStreak: (id, today) => api.get(`/habits/${id}/streak?today=${today}`)
 };
 
 // Habit Record API
 export const recordAPI = {
   getByHabit: (habitId) => api.get(`/records/habit/${habitId}`),
-  getAll: ({ page, limit } = {}) => {
-    const params = new URLSearchParams();
-    if (page) params.set('page', page);
-    if (limit) params.set('limit', limit);
-    const query = params.toString();
-    return api.get(`/records${query ? `?${query}` : ''}`);
-  },
-  getByRange: (startDate, endDate, { page, limit } = {}) => {
-    const params = new URLSearchParams({ startDate, endDate });
-    if (page) params.set('page', page);
-    if (limit) params.set('limit', limit);
-    return api.get(`/records/range?${params.toString()}`);
-  },
+  getAll: () => api.get('/records'),
+  getByRange: (startDate, endDate) =>
+    api.get(`/records/range?startDate=${startDate}&endDate=${endDate}`),
   create: (data) => api.post('/records', data),
   delete: (id) => api.delete(`/records/${id}`)
 };

@@ -1,5 +1,5 @@
 import express from 'express';
-import { body, param } from 'express-validator';
+import { body, param, query } from 'express-validator';
 import Habit from '../models/Habit.js';
 import HabitRecord from '../models/HabitRecord.js';
 import User from '../models/User.js';
@@ -10,12 +10,30 @@ import {
   setPaginationHeaders
 } from '../middleware/pagination.js';
 import runValidation from '../middleware/validate.js';
+import {
+  toUtcDayNumber,
+  streaksFromDayNumbers
+} from '../../shared/streak.js';
 
 const router = express.Router();
 
 router.use(authMiddleware);
 
 const idParam = [param('id').isMongoId().withMessage('Invalid habit id'), runValidation];
+
+// Optional "today" anchor so the current-streak boundary follows the client's
+// local calendar day rather than the server's UTC day.
+const todayQueryValidator = [
+  query('today')
+    .optional()
+    .matches(/^\d{4}-\d{2}-\d{2}$/)
+    .withMessage('Invalid today (expected YYYY-MM-DD)'),
+  runValidation
+];
+
+function resolveTodayDayNumber(req) {
+  return toUtcDayNumber(req.query.today ? new Date(req.query.today) : new Date());
+}
 
 const habitBodyValidators = [
   body('name').optional().isString().withMessage('Invalid name'),
@@ -44,6 +62,64 @@ router.get('/', listQueryValidators, async (req, res) => {
 
     setPaginationHeaders(res, total, page, limit);
     res.json(habits);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get current + longest streaks for every habit of the authenticated user.
+// Returns a map keyed by habit id: { [habitId]: { current, longest } }.
+router.get('/streaks', todayQueryValidator, async (req, res) => {
+  try {
+    const todayDayNumber = resolveTodayDayNumber(req);
+
+    const [habits, records] = await Promise.all([
+      Habit.find({ userId: req.user._id }).select('_id'),
+      HabitRecord.find({ userId: req.user._id, completed: true }).select('habitId date')
+    ]);
+
+    // Group completed-day numbers by habit.
+    const daysByHabit = new Map();
+    for (const record of records) {
+      const key = record.habitId.toString();
+      if (!daysByHabit.has(key)) daysByHabit.set(key, []);
+      daysByHabit.get(key).push(toUtcDayNumber(record.date));
+    }
+
+    // Include every habit, even those without any records yet.
+    const streaks = {};
+    for (const habit of habits) {
+      const key = habit._id.toString();
+      streaks[key] = streaksFromDayNumbers(daysByHabit.get(key) || [], todayDayNumber);
+    }
+
+    res.json(streaks);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get current + longest streak for a single habit (verify ownership)
+router.get('/:id/streak', idParam, todayQueryValidator, async (req, res) => {
+  try {
+    const habit = await Habit.findOne({
+      _id: req.params.id,
+      userId: req.user._id
+    });
+    if (!habit) {
+      return res.status(404).json({ message: 'Habit not found' });
+    }
+
+    const records = await HabitRecord.find({
+      habitId: habit._id,
+      userId: req.user._id,
+      completed: true
+    }).select('date');
+
+    const dayNumbers = records.map((r) => toUtcDayNumber(r.date));
+    const streak = streaksFromDayNumbers(dayNumbers, resolveTodayDayNumber(req));
+
+    res.json(streak);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
