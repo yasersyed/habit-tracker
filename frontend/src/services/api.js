@@ -50,9 +50,19 @@ export const habitAPI = {
 // Habit Record API
 export const recordAPI = {
   getByHabit: (habitId) => api.get(`/records/habit/${habitId}`),
-  getAll: () => api.get('/records'),
-  getByRange: (startDate, endDate) =>
-    api.get(`/records/range?startDate=${startDate}&endDate=${endDate}`),
+  getAll: ({ page, limit } = {}) => {
+    const params = new URLSearchParams();
+    if (page) params.set('page', page);
+    if (limit) params.set('limit', limit);
+    const query = params.toString();
+    return api.get(`/records${query ? `?${query}` : ''}`);
+  },
+  getByRange: (startDate, endDate, { page, limit } = {}) => {
+    const params = new URLSearchParams({ startDate, endDate });
+    if (page) params.set('page', page);
+    if (limit) params.set('limit', limit);
+    return api.get(`/records/range?${params.toString()}`);
+  },
   create: (data) => api.post('/records', data),
   delete: (id) => api.delete(`/records/${id}`)
 };

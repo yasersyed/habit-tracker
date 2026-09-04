@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { habitAPI, recordAPI, userAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { localDateString, localTomorrowString } from '../utils/date';
+import { computeStreaks } from '../utils/streak';
 import { xpForLevel } from '../../../shared/xp.js';
 import HabitForm from './HabitForm';
 import HabitCard from './HabitCard';
@@ -11,6 +12,7 @@ import './HabitDashboard.css';
 function HabitDashboard() {
   const [habits, setHabits] = useState([]);
   const [records, setRecords] = useState([]);
+  const [streaks, setStreaks] = useState({});
   const [showForm, setShowForm] = useState(false);
   const [userXp, setUserXp] = useState({ level: 1, xp: 0, totalXp: 0 });
   const { user } = useAuth();
@@ -18,8 +20,40 @@ function HabitDashboard() {
   useEffect(() => {
     loadHabits();
     loadTodayRecords();
+    loadStreaks();
     loadUserXp();
   }, []);
+
+  // Fetch the user's full completion history (paging past the API's per-page
+  // limit) and compute the current and longest daily streak for each habit.
+  const loadStreaks = async () => {
+    try {
+      const PAGE_SIZE = 100;
+      const completedDates = {}; // habitId -> string[] of "YYYY-MM-DD"
+
+      let page = 1;
+      let totalPages = 1;
+      do {
+        const response = await recordAPI.getAll({ page, limit: PAGE_SIZE });
+        totalPages = Number(response.headers['x-total-pages']) || 1;
+        for (const record of response.data) {
+          if (!record.completed || !record.habitId) continue;
+          const habitId = record.habitId._id || record.habitId;
+          const key = localDateString(new Date(record.date));
+          (completedDates[habitId] ||= []).push(key);
+        }
+        page++;
+      } while (page <= totalPages);
+
+      const computed = {};
+      for (const [habitId, dates] of Object.entries(completedDates)) {
+        computed[habitId] = computeStreaks(dates);
+      }
+      setStreaks(computed);
+    } catch (error) {
+      console.error('Error loading streaks:', error);
+    }
+  };
 
   const loadUserXp = async () => {
     try {
@@ -71,6 +105,7 @@ function HabitDashboard() {
         }
         loadHabits();
         loadTodayRecords();
+        loadStreaks();
       } catch (error) {
         console.error('Error deleting habit:', error);
       }
@@ -98,6 +133,7 @@ function HabitDashboard() {
       }
 
       loadTodayRecords();
+      loadStreaks();
     } catch (error) {
       console.error('Error toggling habit:', error);
     }
@@ -144,6 +180,7 @@ function HabitDashboard() {
               key={habit._id}
               habit={habit}
               isCompleted={isHabitCompleted(habit._id)}
+              streak={streaks[habit._id]}
               onToggle={() => handleToggleHabit(habit._id)}
               onDelete={() => handleDeleteHabit(habit._id)}
             />
