@@ -174,7 +174,7 @@ PORT=5000
 
 ## Frontend To-Do
 
-- [ ] **Habit Streaks UI** - Display current and best streak counts on each habit card
+- [x] **Habit Streaks UI** - Display best streak on each habit card, with a button to reveal the current streak
 - [ ] **Calendar View** - Calendar component showing completion history for habits
 - [ ] **Statistics / Charts** - Visual progress charts (weekly/monthly completion rates, XP over time)
 - [ ] **Habit Categories & Tags** - Organize habits with categories/tags and filter by them
