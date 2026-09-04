@@ -116,6 +116,8 @@ habit-tracker/
 
 ### Habits (`/api/habits`)
 - `GET /user/:userId` - Get all habits for a user
+- `GET /streaks?today=YYYY-MM-DD` - Get `{ current, longest }` streaks for every habit (map keyed by habit id)
+- `GET /:id/streak?today=YYYY-MM-DD` - Get `{ current, longest }` streak for one habit
 - `GET /:id` - Get habit by ID
 - `POST /` - Create habit (body: {userId, name, description?, frequency?, color?})
 - `PUT /:id` - Update habit
@@ -187,7 +189,7 @@ PORT=5000
 
 ## Backend To-Do
 
-- [ ] **Streak Calculation** - API logic to compute current/longest streaks per habit
+- [x] **Streak Calculation** - API logic to compute current/longest streaks per habit
 - [ ] **Statistics Endpoints** - Endpoints for aggregated stats (completion rates, XP trends)
 - [ ] **Categories/Tags Model** - Category/tag schema and association with habits
 - [ ] **Reminder System** - Scheduled notifications (email or push) for habit reminders
