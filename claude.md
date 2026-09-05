@@ -130,6 +130,12 @@ habit-tracker/
 - `POST /` - Create or update record (body: {habitId, userId, date, completed, notes?})
 - `DELETE /:id` - Delete record
 
+### Statistics (`/api/stats`)
+All endpoints accept optional `?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD` (default: last 30 days ending today, UTC). Completion rate uses each habit's frequency and creation date to compute expected occurrences.
+- `GET /summary` - KPIs for the range: `{ range, habitCount, totalCompletions, activeDays, xpEarned, completionRate }`
+- `GET /daily` - Zero-filled per-day series for trend charts: `{ range, days: [{ date, completions, xpEarned, cumulativeXp }] }`
+- `GET /habits` - Per-habit breakdown: `{ range, habits: [{ habitId, name, color, frequency, completions, expected, completionRate, xpEarned }] }`
+
 ## Key Features
 
 1. **Multi-User Support**: Switch between users or create new ones
@@ -190,7 +196,7 @@ PORT=5000
 ## Backend To-Do
 
 - [x] **Streak Calculation** - API logic to compute current/longest streaks per habit
-- [ ] **Statistics Endpoints** - Endpoints for aggregated stats (completion rates, XP trends)
+- [x] **Statistics Endpoints** - Endpoints for aggregated stats (completion rates, XP trends)
 - [ ] **Categories/Tags Model** - Category/tag schema and association with habits
 - [ ] **Reminder System** - Scheduled notifications (email or push) for habit reminders
 - [ ] **Data Export Endpoint** - `GET /api/export` to generate CSV/JSON of user data
