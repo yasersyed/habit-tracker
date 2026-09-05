@@ -184,7 +184,7 @@ PORT=5000
 
 - [x] **Habit Streaks UI** - Display best streak on each habit card, with a button to reveal the current streak
 - [ ] **Calendar View** - Calendar component showing completion history for habits
-- [ ] **Statistics / Charts** - Visual progress charts (weekly/monthly completion rates, XP over time)
+- [x] **Statistics / Charts** - Visual progress charts (completion rates, XP over time) powered by `/api/stats`
 - [ ] **Habit Categories & Tags** - Organize habits with categories/tags and filter by them
 - [ ] **Dark Mode** - Dark theme toggle using CSS variables
 - [ ] **Mobile Responsiveness** - Improve layouts for small screens (cards, forms, navigation)
