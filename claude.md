@@ -130,6 +130,12 @@ habit-tracker/
 - `POST /` - Create or update record (body: {habitId, userId, date, completed, notes?})
 - `DELETE /:id` - Delete record
 
+### Statistics (`/api/stats`)
+All endpoints accept optional `?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD` (default: last 30 days ending today, UTC). Completion rate uses each habit's frequency and creation date to compute expected occurrences.
+- `GET /summary` - KPIs for the range: `{ range, habitCount, totalCompletions, activeDays, xpEarned, completionRate }`
+- `GET /daily` - Zero-filled per-day series for trend charts: `{ range, days: [{ date, completions, xpEarned, cumulativeXp }] }`
+- `GET /habits` - Per-habit breakdown: `{ range, habits: [{ habitId, name, color, frequency, completions, expected, completionRate, xpEarned }] }`
+
 ## Key Features
 
 1. **Multi-User Support**: Switch between users or create new ones
@@ -178,7 +184,7 @@ PORT=5000
 
 - [x] **Habit Streaks UI** - Display best streak on each habit card, with a button to reveal the current streak
 - [ ] **Calendar View** - Calendar component showing completion history for habits
-- [ ] **Statistics / Charts** - Visual progress charts (weekly/monthly completion rates, XP over time)
+- [x] **Statistics / Charts** - Visual progress charts (completion rates, XP over time) powered by `/api/stats`
 - [ ] **Habit Categories & Tags** - Organize habits with categories/tags and filter by them
 - [ ] **Dark Mode** - Dark theme toggle using CSS variables
 - [ ] **Mobile Responsiveness** - Improve layouts for small screens (cards, forms, navigation)
@@ -190,7 +196,7 @@ PORT=5000
 ## Backend To-Do
 
 - [x] **Streak Calculation** - API logic to compute current/longest streaks per habit
-- [ ] **Statistics Endpoints** - Endpoints for aggregated stats (completion rates, XP trends)
+- [x] **Statistics Endpoints** - Endpoints for aggregated stats (completion rates, XP trends)
 - [ ] **Categories/Tags Model** - Category/tag schema and association with habits
 - [ ] **Reminder System** - Scheduled notifications (email or push) for habit reminders
 - [ ] **Data Export Endpoint** - `GET /api/export` to generate CSV/JSON of user data

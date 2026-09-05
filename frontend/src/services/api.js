@@ -59,3 +59,18 @@ export const recordAPI = {
   create: (data) => api.post('/records', data),
   delete: (id) => api.delete(`/records/${id}`)
 };
+
+// Statistics API — all accept a { startDate, endDate } range (YYYY-MM-DD).
+const rangeQuery = ({ startDate, endDate } = {}) => {
+  const params = new URLSearchParams();
+  if (startDate) params.set('startDate', startDate);
+  if (endDate) params.set('endDate', endDate);
+  const q = params.toString();
+  return q ? `?${q}` : '';
+};
+
+export const statsAPI = {
+  getSummary: (range) => api.get(`/stats/summary${rangeQuery(range)}`),
+  getDaily: (range) => api.get(`/stats/daily${rangeQuery(range)}`),
+  getHabits: (range) => api.get(`/stats/habits${rangeQuery(range)}`)
+};
