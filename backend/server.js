@@ -20,11 +20,15 @@ connectDB();
 const allowedOrigins = process.env.CORS_ORIGINS
   ? process.env.CORS_ORIGINS.split(',').map(o => o.trim())
   : ['http://localhost:5173'];
+// Set CORS_ORIGINS=* to allow any origin (convenient for a hosted testing
+// deployment where the public URL/IP isn't known ahead of time). Tighten to
+// explicit origins for production.
+const allowAllOrigins = allowedOrigins.includes('*');
 
 app.use(cors({
   origin(origin, callback) {
     // Allow requests with no origin (e.g. curl, server-to-server)
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin || allowAllOrigins || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error(`Origin ${origin} not allowed by CORS`));
