@@ -1,0 +1,11 @@
+{
+  "name": "habit-tracker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Gamified habit tracker — monorepo root and version source of truth",
+  "type": "module",
+  "scripts": {
+    "bump": "node scripts/bump-version.mjs",
+    "check:version": "node scripts/check-version.mjs"
+  }
+}

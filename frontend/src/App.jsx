@@ -7,6 +7,9 @@ import HabitDashboard from './components/HabitDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
+// Injected at build time by Vite (see vite.config.js); guarded for tests.
+const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'dev';
+
 function App() {
   const { user, logout, loading } = useAuth();
 
@@ -51,6 +54,11 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
+
+      <footer className="app-footer">
+        <span>Habit Tracker</span>
+        <span className="app-version">v{APP_VERSION}</span>
+      </footer>
     </div>
   );
 }
