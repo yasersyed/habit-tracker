@@ -124,7 +124,9 @@ function HabitDashboard() {
   };
 
   const xpToNext = xpForLevel(userXp.level);
-  const xpPercent = xpToNext > 0 ? (userXp.xp / xpToNext) * 100 : 0;
+  const xpPercent = xpToNext > 0
+    ? Math.min(100, Math.max(0, (userXp.xp / xpToNext) * 100))
+    : 0;
 
   return (
     <div className="habit-dashboard">

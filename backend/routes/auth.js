@@ -77,14 +77,7 @@ router.post('/register', registerLimiter, registerValidators, async (req, res) =
 
     res.status(201).json({
       token,
-      user: {
-        _id: user._id,
-        username: user.username,
-        email: user.email,
-        level: user.level,
-        xp: user.xp,
-        totalXp: user.totalXp
-      }
+      user: user.toPublicJSON()
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -116,14 +109,7 @@ router.post('/login', loginLimiter, loginValidators, async (req, res) => {
 
     res.json({
       token,
-      user: {
-        _id: user._id,
-        username: user.username,
-        email: user.email,
-        level: user.level,
-        xp: user.xp,
-        totalXp: user.totalXp
-      }
+      user: user.toPublicJSON()
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -132,15 +118,7 @@ router.post('/login', loginLimiter, loginValidators, async (req, res) => {
 
 // GET /api/auth/me
 router.get('/me', authMiddleware, (req, res) => {
-  const user = req.user;
-  res.json({
-    _id: user._id,
-    username: user.username,
-    email: user.email,
-    level: user.level,
-    xp: user.xp,
-    totalXp: user.totalXp
-  });
+  res.json(req.user.toPublicJSON());
 });
 
 export default router;

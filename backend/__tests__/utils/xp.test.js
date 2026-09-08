@@ -1,96 +1,82 @@
 import { describe, test, expect } from '@jest/globals';
-import { xpForLevel, computeLevelInfo } from '../../../shared/xp.js';
+import { xpForLevel, totalXpForLevel, computeLevelInfo } from '../../../shared/xp.js';
 
 describe('XP Utilities', () => {
   describe('xpForLevel', () => {
-    test('levels 1-10 require 100 XP each', () => {
-      for (let i = 1; i <= 10; i++) {
-        expect(xpForLevel(i)).toBe(100);
+    test('follows a smooth +50 per level curve (100 + (level-1)*50)', () => {
+      expect(xpForLevel(1)).toBe(100);
+      expect(xpForLevel(2)).toBe(150);
+      expect(xpForLevel(3)).toBe(200);
+      expect(xpForLevel(5)).toBe(300);
+      expect(xpForLevel(10)).toBe(550);
+      expect(xpForLevel(11)).toBe(600);
+      expect(xpForLevel(20)).toBe(1050);
+    });
+
+    test('strictly increases every level (no flat bands)', () => {
+      for (let i = 1; i < 100; i++) {
+        expect(xpForLevel(i + 1)).toBeGreaterThan(xpForLevel(i));
       }
     });
 
-    test('levels 11-20 require 250 XP each', () => {
-      for (let i = 11; i <= 20; i++) {
-        expect(xpForLevel(i)).toBe(250);
-      }
+    test('clamps level below 1 to the level-1 cost', () => {
+      expect(xpForLevel(0)).toBe(100);
+      expect(xpForLevel(-5)).toBe(100);
+    });
+  });
+
+  describe('totalXpForLevel', () => {
+    test('cumulative XP to reach a level', () => {
+      expect(totalXpForLevel(1)).toBe(0);
+      expect(totalXpForLevel(2)).toBe(100);          // 100
+      expect(totalXpForLevel(3)).toBe(250);          // 100 + 150
+      expect(totalXpForLevel(4)).toBe(450);          // + 200
+      expect(totalXpForLevel(5)).toBe(700);          // + 250
     });
 
-    test('levels 21-30 require 500 XP each', () => {
-      for (let i = 21; i <= 30; i++) {
-        expect(xpForLevel(i)).toBe(500);
+    test('is consistent with xpForLevel', () => {
+      let running = 0;
+      for (let l = 1; l <= 30; l++) {
+        expect(totalXpForLevel(l)).toBe(running);
+        running += xpForLevel(l);
       }
-    });
-
-    test('levels 31+ require 1000 XP each', () => {
-      expect(xpForLevel(31)).toBe(1000);
-      expect(xpForLevel(50)).toBe(1000);
-      expect(xpForLevel(100)).toBe(1000);
     });
   });
 
   describe('computeLevelInfo', () => {
     test('0 XP is level 1 with 0 xp', () => {
-      const info = computeLevelInfo(0);
-      expect(info.level).toBe(1);
-      expect(info.xp).toBe(0);
-      expect(info.xpToNextLevel).toBe(100);
+      expect(computeLevelInfo(0)).toEqual({ level: 1, xp: 0, xpToNextLevel: 100 });
     });
 
     test('50 XP is level 1 with 50 xp', () => {
-      const info = computeLevelInfo(50);
-      expect(info.level).toBe(1);
-      expect(info.xp).toBe(50);
-      expect(info.xpToNextLevel).toBe(100);
+      expect(computeLevelInfo(50)).toEqual({ level: 1, xp: 50, xpToNextLevel: 100 });
     });
 
-    test('100 XP is level 2 with 0 xp', () => {
-      const info = computeLevelInfo(100);
-      expect(info.level).toBe(2);
-      expect(info.xp).toBe(0);
-      expect(info.xpToNextLevel).toBe(100);
+    test('100 XP dings level 2 (next level costs 150)', () => {
+      expect(computeLevelInfo(100)).toEqual({ level: 2, xp: 0, xpToNextLevel: 150 });
     });
 
-    test('1000 XP is level 11 with 0 xp (tier boundary)', () => {
-      const info = computeLevelInfo(1000);
-      expect(info.level).toBe(11);
-      expect(info.xp).toBe(0);
-      expect(info.xpToNextLevel).toBe(250);
+    test('partial progress within a level', () => {
+      // Level 4 starts at 450; +249 stays in level 4 (which needs 250).
+      expect(computeLevelInfo(699)).toEqual({ level: 4, xp: 249, xpToNextLevel: 250 });
     });
 
-    test('999 XP is level 10 with 99 xp', () => {
-      const info = computeLevelInfo(999);
-      expect(info.level).toBe(10);
-      expect(info.xp).toBe(99);
-      expect(info.xpToNextLevel).toBe(100);
+    test('exact level boundary', () => {
+      // 700 total = start of level 5; level 5 needs 300.
+      expect(computeLevelInfo(700)).toEqual({ level: 5, xp: 0, xpToNextLevel: 300 });
     });
 
-    test('3500 XP transitions into tier 3 (level 21)', () => {
-      // Levels 1-10: 10 * 100 = 1000
-      // Levels 11-20: 10 * 250 = 2500
-      // Total for level 21: 3500
-      const info = computeLevelInfo(3500);
-      expect(info.level).toBe(21);
-      expect(info.xp).toBe(0);
-      expect(info.xpToNextLevel).toBe(500);
+    test('negative totals are treated as 0', () => {
+      expect(computeLevelInfo(-100)).toEqual({ level: 1, xp: 0, xpToNextLevel: 100 });
     });
 
-    test('8500 XP transitions into tier 4 (level 31)', () => {
-      // Levels 1-10: 1000
-      // Levels 11-20: 2500
-      // Levels 21-30: 5000
-      // Total for level 31: 8500
-      const info = computeLevelInfo(8500);
-      expect(info.level).toBe(31);
-      expect(info.xp).toBe(0);
-      expect(info.xpToNextLevel).toBe(1000);
-    });
-
-    test('partial XP within tier 2', () => {
-      // 1000 + 125 = 1125
-      const info = computeLevelInfo(1125);
-      expect(info.level).toBe(11);
-      expect(info.xp).toBe(125);
-      expect(info.xpToNextLevel).toBe(250);
+    test('level always matches the cumulative curve', () => {
+      for (let l = 1; l <= 25; l++) {
+        const info = computeLevelInfo(totalXpForLevel(l));
+        expect(info.level).toBe(l);
+        expect(info.xp).toBe(0);
+        expect(info.xpToNextLevel).toBe(xpForLevel(l));
+      }
     });
   });
 });

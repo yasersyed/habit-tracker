@@ -14,14 +14,7 @@ const updateMeValidators = [
 // Get current user's profile (protected)
 router.get('/me', authMiddleware, async (req, res) => {
   try {
-    res.json({
-      _id: req.user._id,
-      username: req.user.username,
-      email: req.user.email,
-      level: req.user.level,
-      xp: req.user.xp,
-      totalXp: req.user.totalXp
-    });
+    res.json(req.user.toPublicJSON());
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -35,14 +28,7 @@ router.put('/me', authMiddleware, updateMeValidators, async (req, res) => {
     if (req.body.username) user.username = req.body.username;
 
     const updatedUser = await user.save();
-    res.json({
-      _id: updatedUser._id,
-      username: updatedUser.username,
-      email: updatedUser.email,
-      level: updatedUser.level,
-      xp: updatedUser.xp,
-      totalXp: updatedUser.totalXp
-    });
+    res.json(updatedUser.toPublicJSON());
   } catch (error) {
     res.status(400).json({ message: error.message });
   }

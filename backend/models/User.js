@@ -59,6 +59,20 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
+// Public-safe representation. Level/xp are derived from totalXp so the current
+// leveling curve always applies, even to users whose stored fields predate it.
+userSchema.methods.toPublicJSON = function() {
+  const { level, xp } = computeLevelInfo(this.totalXp);
+  return {
+    _id: this._id,
+    username: this.username,
+    email: this.email,
+    level,
+    xp,
+    totalXp: this.totalXp
+  };
+};
+
 const User = mongoose.model('User', userSchema);
 
 export default User;
