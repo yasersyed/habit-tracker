@@ -113,3 +113,49 @@ you mean to wipe.
   `CORS_ORIGINS=https://yourdomain` in `.env` and restart.
 - **Managed database:** swap the bundled Mongo for a MongoDB Atlas cluster by
   removing the `mongodb` service and setting `MONGODB_URI` to the Atlas string.
+
+---
+
+# Deployment roadmap (backlog)
+
+Not needed for the current single-VM user-testing deploy, captured here for later.
+
+## 1. HTTPS + custom domain (blocked on: a domain)
+Let's Encrypt can't issue certs for a bare IP, so this needs a domain with an
+A record pointing at the server. Preferred approach — **Caddy reverse proxy**:
+- Add an opt-in `docker-compose.https.yml` overlay with a `caddy` service on
+  ports 80/443 that reverse-proxies to the `frontend` container; Caddy fetches
+  and auto-renews the certificate.
+- Stop publishing port 80 from `frontend` (Caddy fronts it); persist certs in
+  `caddy_data`/`caddy_config` volumes.
+- Set `DOMAIN` and `CORS_ORIGINS=https://<domain>` in `.env`.
+- Alternative: put Cloudflare in front (edge TLS, origin stays HTTP).
+
+## 2. Kubernetes: make `kube/` cloud-ready
+The manifests (`kube/`, kustomize base + dev/prod overlays) already cover
+Deployments, Services, MongoDB PVC, health probes, secrets, and configmap.
+To run on a real cluster:
+- **Images:** push `habit-tracker-backend` / `-frontend` to a registry
+  (Docker Hub / GHCR / cloud registry) and set them via a kustomize `images:`
+  override with a pinned tag (not `latest`).
+- **Secrets:** replace the plaintext placeholders in `kube/base/secrets.yaml`
+  with real values created out-of-band (`kubectl create secret`,
+  sealed-secrets, or an external secrets operator) — keep them out of git.
+- **Config:** set `CORS_ORIGINS` in the configmap to the real external URL.
+- **Ingress + TLS:** add an Ingress + ingress-controller + cert-manager for a
+  domain and Let's Encrypt (the k8s equivalent of item 1).
+- **MongoDB:** the Deployment + PVC is fine for testing; consider a StatefulSet
+  or managed Atlas for production durability.
+
+### Choosing a cluster
+- **Learning / validating the manifests:** local **kind / minikube / k3d** —
+  free. The `dev` overlay's NodePort (30081) is built for this.
+- **Cheap always-on:** **k3s** on a single small VM (≈ the cost of the VM).
+- **Genuinely free managed:** **Oracle OKE** on Always Free Arm nodes (capacity
+  permitting).
+- **Managed cloud:** GKE / AKS / DigitalOcean / Civo / Linode (new-account
+  credits, then ~$10–75/mo) or AWS EKS (~$73/mo control plane + nodes).
+
+> Note: for user-testing scale, the single-VM Docker Compose setup above is
+> sufficient. Move to Kubernetes when you need multi-node self-healing,
+> horizontal scaling, or rolling deploys.
