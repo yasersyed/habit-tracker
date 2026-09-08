@@ -1,6 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import connectDB from './config/db.js';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
@@ -9,6 +12,13 @@ import habitRecordRoutes from './routes/habitRecords.js';
 import statsRoutes from './routes/stats.js';
 
 dotenv.config();
+
+// App version, read from package.json (kept in sync across packages via
+// `npm run bump`). Exposed at /api/version and included in /api/health.
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const { version } = JSON.parse(
+  readFileSync(join(__dirname, 'package.json'), 'utf8')
+);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -46,9 +56,14 @@ app.use('/api/habits', habitRoutes);
 app.use('/api/records', habitRecordRoutes);
 app.use('/api/stats', statsRoutes);
 
+// Version
+app.get('/api/version', (req, res) => {
+  res.json({ version });
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Habit Tracker API is running' });
+  res.json({ status: 'ok', version, message: 'Habit Tracker API is running' });
 });
 
 app.listen(PORT, () => {

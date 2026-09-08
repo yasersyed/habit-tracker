@@ -50,6 +50,21 @@
   padding: 2rem;
 }
 
+.app-footer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem 2rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #9ca3af;
+  font-size: 0.8rem;
+}
+
+.app-version {
+  font-variant-numeric: tabular-nums;
+}
+
 .loading {
   display: flex;
   justify-content: center;

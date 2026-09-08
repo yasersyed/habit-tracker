@@ -170,6 +170,7 @@ PORT=5000
 - **CORS**: Backend restricts origins via `CORS_ORIGINS` env var (comma-separated); defaults to `http://localhost:5173`
 - **API Proxy**: Vite proxies `/api` requests to avoid CORS issues in development
 - **ES Modules**: Backend uses `"type": "module"` in package.json
+- **Versioning**: Unified SemVer across all packages; the root `package.json` `version` is the source of truth, propagated by `npm run bump -- <major|minor|patch|X.Y.Z>` and verified by `npm run check:version` (also run in CI). The running version is exposed at `GET /api/version` (and in `/api/health`) and shown in the app footer. See `CHANGELOG.md` and `RELEASING.md`. Currently pre-1.0 (v0.1.0) during user testing.
 - **Leveling Curve**: XP to advance a level grows smoothly — `xpForLevel(level) = 100 + (level - 1) * 50` (`shared/xp.js`), so each level costs a little more than the last instead of flat bands. `level`/`xp` are always derived from `totalXp` (via `User.toPublicJSON()` / `computeLevelInfo`), so curve changes apply to existing users without a migration.
 
 ## Completed Features

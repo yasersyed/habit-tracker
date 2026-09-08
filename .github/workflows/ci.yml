@@ -7,6 +7,20 @@ on:
     branches: [master]
 
 jobs:
+  version-check:
+    name: Version Consistency
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Check package versions are in sync
+        run: node scripts/check-version.mjs
+
   backend-tests:
     name: Backend Tests
     runs-on: ubuntu-latest
