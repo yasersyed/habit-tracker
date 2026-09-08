@@ -1,0 +1,56 @@
+# Full-stack production stack: MongoDB + backend API + frontend (nginx).
+# Runs the whole app on any single Docker host (an AWS EC2/Lightsail VM, etc.).
+#
+#   cp .env.prod.example .env    # then edit the secrets
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# The frontend (nginx, port 80) serves the built SPA and proxies /api to the
+# backend, so the app is same-origin — only port 80 is exposed publicly.
+services:
+  mongodb:
+    image: mongo:7.0
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - habit-tracker
+    # Not published to the host — only the backend reaches it over the network.
+
+  # Service name must be "backend-service" to match the nginx upstream in
+  # frontend/nginx.conf (shared with the Kubernetes manifests).
+  backend-service:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    environment:
+      MONGODB_URI: mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/${MONGO_DB:-habit_tracker}?authSource=admin
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+      PORT: "5000"
+    depends_on:
+      - mongodb
+    networks:
+      - habit-tracker
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend-service
+    networks:
+      - habit-tracker
+
+volumes:
+  mongodb_data:
+
+networks:
+  habit-tracker:
