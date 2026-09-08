@@ -239,31 +239,33 @@ describe('User Model', () => {
     expect(user.totalXp).toBe(0);
   });
 
-  test('should compute level from totalXp on save', async () => {
+  test('should compute level and xp from totalXp on save', async () => {
     const user = await User.create({
       username: 'testuser',
       email: 'test@example.com',
       password: 'password123'
     });
 
-    user.totalXp = 250;
+    // Curve: 100 (L1) + 150 (L2) = 250, leaving 50 XP into level 3.
+    user.totalXp = 300;
     await user.save();
 
     expect(user.level).toBe(3);
     expect(user.xp).toBe(50);
   });
 
-  test('should handle tier boundary at level 11', async () => {
+  test('should land exactly on a level boundary', async () => {
     const user = await User.create({
       username: 'testuser',
       email: 'test@example.com',
       password: 'password123'
     });
 
+    // Cumulative XP to reach level 6: 100 + 150 + 200 + 250 + 300 = 1000.
     user.totalXp = 1000;
     await user.save();
 
-    expect(user.level).toBe(11);
+    expect(user.level).toBe(6);
     expect(user.xp).toBe(0);
   });
 

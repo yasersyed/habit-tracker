@@ -170,6 +170,7 @@ PORT=5000
 - **CORS**: Backend restricts origins via `CORS_ORIGINS` env var (comma-separated); defaults to `http://localhost:5173`
 - **API Proxy**: Vite proxies `/api` requests to avoid CORS issues in development
 - **ES Modules**: Backend uses `"type": "module"` in package.json
+- **Leveling Curve**: XP to advance a level grows smoothly — `xpForLevel(level) = 100 + (level - 1) * 50` (`shared/xp.js`), so each level costs a little more than the last instead of flat bands. `level`/`xp` are always derived from `totalXp` (via `User.toPublicJSON()` / `computeLevelInfo`), so curve changes apply to existing users without a migration.
 
 ## Completed Features
 
