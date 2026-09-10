@@ -18,6 +18,8 @@ router.use(authMiddleware);
 const recordIdParam = [param('id').isMongoId().withMessage('Invalid record id'), runValidation];
 const habitListQueryValidators = [
   param('habitId').isMongoId().withMessage('Invalid habit id'),
+  query('startDate').optional().isISO8601().withMessage('Invalid startDate'),
+  query('endDate').optional().isISO8601().withMessage('Invalid endDate'),
   ...paginationQueryValidators,
   runValidation
 ];
@@ -53,6 +55,9 @@ router.get(
         habitId: req.params.habitId,
         userId: req.user._id
       };
+      if (req.query.startDate && req.query.endDate) {
+        filter.date = { $gte: new Date(req.query.startDate), $lt: new Date(req.query.endDate) };
+      }
       const { page, limit, skip } = parsePaginationQuery(req);
       const [total, records] = await Promise.all([
         HabitRecord.countDocuments(filter),

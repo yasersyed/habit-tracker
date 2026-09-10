@@ -88,6 +88,23 @@ describe('HabitRecord Routes', () => {
       expect(response.status).toBe(401);
     });
 
+    test('should filter by startDate and endDate range', async () => {
+      await HabitRecord.create([
+        { habitId: testHabit._id, userId: testUser._id, date: new Date('2024-01-05') },
+        { habitId: testHabit._id, userId: testUser._id, date: new Date('2024-01-10') },
+        { habitId: testHabit._id, userId: testUser._id, date: new Date('2024-01-20') }
+      ]);
+
+      const response = await request(app)
+        .get(`/api/records/habit/${testHabit._id}`)
+        .query({ startDate: '2024-01-08', endDate: '2024-01-15' })
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveLength(1);
+      expect(new Date(response.body[0].date).toISOString()).toBe('2024-01-10T00:00:00.000Z');
+    });
+
     test('should support pagination for habit records', async () => {
       await HabitRecord.create([
         { habitId: testHabit._id, userId: testUser._id, date: new Date('2024-01-01') },

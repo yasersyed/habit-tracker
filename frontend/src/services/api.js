@@ -52,7 +52,13 @@ export const habitAPI = {
 
 // Habit Record API
 export const recordAPI = {
-  getByHabit: (habitId) => api.get(`/records/habit/${habitId}`),
+  getByHabit: (habitId, { startDate, endDate } = {}) => {
+    const params = new URLSearchParams();
+    if (startDate) params.set('startDate', startDate);
+    if (endDate) params.set('endDate', endDate);
+    params.set('limit', '100');
+    return api.get(`/records/habit/${habitId}?${params.toString()}`);
+  },
   getAll: () => api.get('/records'),
   getByRange: (startDate, endDate) =>
     api.get(`/records/range?startDate=${startDate}&endDate=${endDate}`),

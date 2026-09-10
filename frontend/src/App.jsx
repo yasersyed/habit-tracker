@@ -1,10 +1,11 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, NavLink } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { useTheme } from './context/ThemeContext';
 import Login from './components/Login';
 import Signup from './components/Signup';
 import HabitDashboard from './components/HabitDashboard';
+import Calendar from './components/Calendar';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
@@ -28,6 +29,12 @@ function App() {
       <header className="app-header">
         <h1>Habit Tracker</h1>
         <div className="header-actions">
+          {user && (
+            <nav className="app-nav">
+              <NavLink to="/" end className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Dashboard</NavLink>
+              <NavLink to="/calendar" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Calendar</NavLink>
+            </nav>
+          )}
           <button
             onClick={toggleTheme}
             className="theme-toggle"
@@ -60,6 +67,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <HabitDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/calendar"
+            element={
+              <ProtectedRoute>
+                <Calendar />
               </ProtectedRoute>
             }
           />
