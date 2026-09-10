@@ -170,6 +170,7 @@ PORT=5000
 - **CORS**: Backend restricts origins via `CORS_ORIGINS` env var (comma-separated); defaults to `http://localhost:5173`
 - **API Proxy**: Vite proxies `/api` requests to avoid CORS issues in development
 - **ES Modules**: Backend uses `"type": "module"` in package.json
+- **Theming**: Light/dark mode via CSS custom properties defined in `frontend/src/index.css` (`:root` light defaults; dark under `:root[data-theme="dark"]` and a `prefers-color-scheme` fallback). `ThemeContext` persists the choice in `localStorage` and defaults to the OS preference; an inline script in `index.html` stamps the theme before first paint to avoid a flash. Component CSS uses the tokens — add new colors as tokens, not literals.
 - **Versioning**: Unified SemVer across all packages; the root `package.json` `version` is the source of truth, propagated by `npm run bump -- <major|minor|patch|X.Y.Z>` and verified by `npm run check:version` (also run in CI). The running version is exposed at `GET /api/version` (and in `/api/health`) and shown in the app footer. See `CHANGELOG.md` and `RELEASING.md`. Currently pre-1.0 (v0.1.0) during user testing.
 - **Leveling Curve**: XP to advance a level grows smoothly — `xpForLevel(level) = 100 + (level - 1) * 50` (`shared/xp.js`), so each level costs a little more than the last instead of flat bands. `level`/`xp` are always derived from `totalXp` (via `User.toPublicJSON()` / `computeLevelInfo`), so curve changes apply to existing users without a migration.
 
@@ -188,7 +189,7 @@ PORT=5000
 - [ ] **Calendar View** - Calendar component showing completion history for habits
 - [x] **Statistics / Charts** - Visual progress charts (completion rates, XP over time) powered by `/api/stats`
 - [ ] **Habit Categories & Tags** - Organize habits with categories/tags and filter by them
-- [ ] **Dark Mode** - Dark theme toggle using CSS variables
+- [x] **Dark Mode** - Dark theme toggle using CSS variables (persisted, honors system preference)
 - [ ] **Mobile Responsiveness** - Improve layouts for small screens (cards, forms, navigation)
 - [ ] **Notifications / Reminders UI** - Settings page for configuring habit reminders
 - [ ] **Data Export UI** - Button to export habit data as CSV or JSON

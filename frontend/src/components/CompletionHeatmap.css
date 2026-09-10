@@ -1,6 +1,6 @@
 .heatmap-container {
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 1.25rem;
   margin-bottom: 1.5rem;
@@ -19,7 +19,7 @@
   margin: 0;
   font-size: 1rem;
   font-weight: 700;
-  color: #374151;
+  color: var(--text-secondary);
 }
 
 .heatmap-stats {
@@ -36,13 +36,13 @@
 .stat-value {
   font-size: 1.15rem;
   font-weight: 700;
-  color: #7c3aed;
+  color: var(--brand-purple);
   line-height: 1;
 }
 
 .stat-label {
   font-size: 0.7rem;
-  color: #9ca3af;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.03em;
   margin-top: 0.15rem;
@@ -68,7 +68,7 @@
 
 .month-label {
   font-size: 0.65rem;
-  color: #9ca3af;
+  color: var(--text-muted);
   white-space: nowrap;
 }
 
@@ -87,7 +87,7 @@
 .day-label {
   height: 14px;
   font-size: 0.6rem;
-  color: #9ca3af;
+  color: var(--text-muted);
   display: flex;
   align-items: center;
   line-height: 1;
@@ -112,17 +112,17 @@
 }
 
 .heatmap-cell:hover {
-  outline: 2px solid #7c3aed;
+  outline: 2px solid var(--brand-purple);
   outline-offset: -1px;
 }
 
 .heatmap-cell.intensity--1 {
-  background: #f3f4f6;
+  background: var(--cell-future);
   pointer-events: none;
 }
 
 .heatmap-cell.intensity-0 {
-  background: #e5e7eb;
+  background: var(--cell-empty);
 }
 
 .heatmap-cell.intensity-1 {
@@ -142,7 +142,7 @@
 }
 
 .heatmap-cell.today {
-  outline: 2px solid #374151;
+  outline: 2px solid var(--text-secondary);
   outline-offset: -1px;
 }
 
@@ -156,13 +156,13 @@
 
 .legend-label {
   font-size: 0.6rem;
-  color: #9ca3af;
+  color: var(--text-muted);
   margin: 0 2px;
 }
 
 .heatmap-loading {
   text-align: center;
-  color: #9ca3af;
+  color: var(--text-muted);
   padding: 1rem;
   font-size: 0.85rem;
 }

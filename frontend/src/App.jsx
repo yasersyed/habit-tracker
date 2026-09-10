@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
+import { useTheme } from './context/ThemeContext';
 import Login from './components/Login';
 import Signup from './components/Signup';
 import HabitDashboard from './components/HabitDashboard';
@@ -12,6 +13,7 @@ const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '
 
 function App() {
   const { user, logout, loading } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   if (loading) {
     return (
@@ -25,12 +27,22 @@ function App() {
     <div className="App">
       <header className="app-header">
         <h1>Habit Tracker</h1>
-        {user && (
-          <div className="header-user">
-            <span>Hello, {user.username}</span>
-            <button onClick={logout} className="logout-btn">Logout</button>
-          </div>
-        )}
+        <div className="header-actions">
+          <button
+            onClick={toggleTheme}
+            className="theme-toggle"
+            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          >
+            {theme === 'dark' ? '☀️' : '🌙'}
+          </button>
+          {user && (
+            <div className="header-user">
+              <span>Hello, {user.username}</span>
+              <button onClick={logout} className="logout-btn">Logout</button>
+            </div>
+          )}
+        </div>
       </header>
 
       <div className="container">
