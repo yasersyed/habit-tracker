@@ -76,7 +76,7 @@ function TimeSeriesChart({ data, mode, color, formatValue }) {
         <path d={area} fill={color} fillOpacity="0.14" />
         <path d={line} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
         {index != null && (
-          <circle cx={x(index)} cy={y(data[index].value)} r="4" fill={color} stroke="#fff" strokeWidth="1.5" />
+          <circle cx={x(index)} cy={y(data[index].value)} r="4" fill={color} className="chart-point-ring" strokeWidth="1.5" />
         )}
       </>
     );
@@ -115,7 +115,7 @@ function TimeSeriesChart({ data, mode, color, formatValue }) {
       >
         {gridValues.map((v, i) => (
           <g key={i}>
-            <line x1={PAD.left} x2={W - PAD.right} y1={y(v)} y2={y(v)} stroke="#e1e0d9" strokeWidth="1" />
+            <line x1={PAD.left} x2={W - PAD.right} y1={y(v)} y2={y(v)} className="chart-grid-line" />
             <text x={PAD.left - 6} y={y(v) + 3} textAnchor="end" className="chart-axis-label">
               {formatValue ? formatValue(Math.round(v)) : Math.round(v)}
             </text>
@@ -123,7 +123,7 @@ function TimeSeriesChart({ data, mode, color, formatValue }) {
         ))}
         {overlay}
         {active && (
-          <line x1={x(index)} x2={x(index)} y1={PAD.top} y2={PAD.top + PLOT_H} stroke="#898781" strokeWidth="1" strokeDasharray="3 3" />
+          <line x1={x(index)} x2={x(index)} y1={PAD.top} y2={PAD.top + PLOT_H} className="chart-crosshair" />
         )}
         {xTicks.map((i) => (
           <text key={i} x={x(i)} y={H - 6} textAnchor="middle" className="chart-axis-label">

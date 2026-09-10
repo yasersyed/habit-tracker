@@ -1,9 +1,9 @@
 .habit-form {
-  background: #f8f9fa;
+  background: var(--surface-2);
   padding: 1.5rem;
   border-radius: 8px;
   margin-bottom: 2rem;
-  border: 2px solid #e9ecef;
+  border: 2px solid var(--border);
 }
 
 .form-group {
@@ -14,7 +14,7 @@
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
   font-size: 14px;
 }
 
@@ -44,7 +44,7 @@
 }
 
 .color-option.selected {
-  border-color: #333;
+  border-color: var(--text-primary);
   transform: scale(1.1);
 }
 
@@ -61,6 +61,6 @@
 }
 
 .btn-submit {
-  background: #10b981;
+  background: var(--success);
   color: white;
 }

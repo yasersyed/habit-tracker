@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Dark mode: a theme toggle in the header, built on CSS custom properties.
+  The choice is saved to `localStorage`, defaults to the OS preference, and is
+  applied before first paint to avoid a flash of the wrong theme.
+
 ## [0.1.0] - 2026-09-08
 
 First versioned release. Establishes the baseline while the app is in user
