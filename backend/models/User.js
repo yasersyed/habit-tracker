@@ -69,7 +69,8 @@ userSchema.methods.toPublicJSON = function() {
     email: this.email,
     level,
     xp,
-    totalXp: this.totalXp
+    totalXp: this.totalXp,
+    createdAt: this.createdAt
   };
 };
 

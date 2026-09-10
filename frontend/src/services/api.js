@@ -35,7 +35,9 @@ export const authAPI = {
 // User API
 export const userAPI = {
   getProfile: () => api.get('/users/me'),
-  updateProfile: (data) => api.put('/users/me', data)
+  updateProfile: (data) => api.put('/users/me', data),
+  changePassword: (data) => api.put('/users/me/password', data),
+  deleteAccount: () => api.delete('/users/me')
 };
 
 // Habit API
