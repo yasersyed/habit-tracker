@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { userAPI, statsAPI } from '../services/api';
+import { userAPI, statsAPI, exportAPI } from '../services/api';
 import { localDateString } from '../utils/date';
 import './Profile.css';
 
@@ -21,6 +21,8 @@ function Profile() {
   const [passwordMessage, setPasswordMessage] = useState(null);
 
   const [dangerMessage, setDangerMessage] = useState(null);
+
+  const [exportMessage, setExportMessage] = useState(null);
 
   useEffect(() => {
     const load = async () => {
@@ -89,6 +91,23 @@ function Profile() {
     }
   };
 
+  const handleExport = async (format) => {
+    setExportMessage(null);
+    try {
+      const res = await exportAPI.download(format);
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `habit-tracker-export-${localDateString()}.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setExportMessage('Could not export data');
+    }
+  };
+
   const handleDeleteAccount = async () => {
     setDangerMessage(null);
 
@@ -145,6 +164,16 @@ function Profile() {
             <div className="label">Active days</div>
           </div>
         </div>
+      </section>
+
+      <section className="profile-card">
+        <h3>Export data</h3>
+        <p className="profile-hint">Download all your habits and completion history.</p>
+        <div className="export-actions">
+          <button type="button" className="btn-primary" onClick={() => handleExport('csv')}>Export CSV</button>
+          <button type="button" className="btn-primary" onClick={() => handleExport('json')}>Export JSON</button>
+        </div>
+        {exportMessage && <div className="form-error">{exportMessage}</div>}
       </section>
 
       <section className="profile-card">

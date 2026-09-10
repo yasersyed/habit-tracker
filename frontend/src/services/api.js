@@ -82,3 +82,8 @@ export const statsAPI = {
   getDaily: (range) => api.get(`/stats/daily${rangeQuery(range)}`),
   getHabits: (range) => api.get(`/stats/habits${rangeQuery(range)}`)
 };
+
+// Export API
+export const exportAPI = {
+  download: (format) => api.get(`/export?format=${format}`, { responseType: 'blob' })
+};
