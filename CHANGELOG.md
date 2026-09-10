@@ -11,6 +11,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dark mode: a theme toggle in the header, built on CSS custom properties.
   The choice is saved to `localStorage`, defaults to the OS preference, and is
   applied before first paint to avoid a flash of the wrong theme.
+- Edit Habit: edit an existing habit's name, description, frequency, color, and
+  XP from a reused create/edit form.
+- Calendar View (`/calendar`): a monthly grid with per-habit backfill (tap a
+  past day to mark/unmark it) and a read-only "all habits" completion overview.
+- User Profile page (`/profile`): overall stats, edit username, change password
+  (`PUT /api/users/me/password`), and delete account (`DELETE /api/users/me`,
+  cascading habits and records).
+- Data Export: `GET /api/export?format=csv|json` for the user's data, with
+  CSV/JSON download buttons on the Profile page.
+- Mobile responsiveness: layouts adapt at the 640px breakpoint (wrapping header
+  nav, stacked cards/forms, a fitted calendar grid).
+
+### Changed
+- Header now has navigation (Dashboard / Calendar / Profile).
 
 ## [0.1.0] - 2026-09-08
 
