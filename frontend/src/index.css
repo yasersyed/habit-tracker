@@ -194,3 +194,7 @@ input:focus, textarea:focus {
   outline: none;
   border-color: var(--accent);
 }
+
+@media (max-width: 640px) {
+  .container { padding: 1rem; }
+}

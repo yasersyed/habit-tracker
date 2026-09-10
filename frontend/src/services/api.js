@@ -35,7 +35,9 @@ export const authAPI = {
 // User API
 export const userAPI = {
   getProfile: () => api.get('/users/me'),
-  updateProfile: (data) => api.put('/users/me', data)
+  updateProfile: (data) => api.put('/users/me', data),
+  changePassword: (data) => api.put('/users/me/password', data),
+  deleteAccount: () => api.delete('/users/me')
 };
 
 // Habit API
@@ -52,7 +54,13 @@ export const habitAPI = {
 
 // Habit Record API
 export const recordAPI = {
-  getByHabit: (habitId) => api.get(`/records/habit/${habitId}`),
+  getByHabit: (habitId, { startDate, endDate } = {}) => {
+    const params = new URLSearchParams();
+    if (startDate) params.set('startDate', startDate);
+    if (endDate) params.set('endDate', endDate);
+    params.set('limit', '100');
+    return api.get(`/records/habit/${habitId}?${params.toString()}`);
+  },
   getAll: () => api.get('/records'),
   getByRange: (startDate, endDate) =>
     api.get(`/records/range?startDate=${startDate}&endDate=${endDate}`),
@@ -73,4 +81,9 @@ export const statsAPI = {
   getSummary: (range) => api.get(`/stats/summary${rangeQuery(range)}`),
   getDaily: (range) => api.get(`/stats/daily${rangeQuery(range)}`),
   getHabits: (range) => api.get(`/stats/habits${rangeQuery(range)}`)
+};
+
+// Export API
+export const exportAPI = {
+  download: (format) => api.get(`/export?format=${format}`, { responseType: 'blob' })
 };

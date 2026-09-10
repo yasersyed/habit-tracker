@@ -10,6 +10,7 @@ import userRoutes from './routes/users.js';
 import habitRoutes from './routes/habits.js';
 import habitRecordRoutes from './routes/habitRecords.js';
 import statsRoutes from './routes/stats.js';
+import exportRoutes from './routes/export.js';
 
 dotenv.config();
 
@@ -55,6 +56,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/habits', habitRoutes);
 app.use('/api/records', habitRecordRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/export', exportRoutes);
 
 // Version
 app.get('/api/version', (req, res) => {

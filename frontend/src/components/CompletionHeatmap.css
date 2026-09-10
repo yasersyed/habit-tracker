@@ -176,4 +176,8 @@
   .heatmap-stats {
     gap: 1rem;
   }
+
+  .heatmap-container {
+    padding: 1rem;
+  }
 }

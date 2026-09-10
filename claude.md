@@ -186,15 +186,15 @@ PORT=5000
 ## Frontend To-Do
 
 - [x] **Habit Streaks UI** - Display best streak on each habit card, with a button to reveal the current streak
-- [ ] **Calendar View** - Calendar component showing completion history for habits
+- [x] **Calendar View** - Monthly calendar; per-habit backfill (tap a day) + all-habits overview
 - [x] **Statistics / Charts** - Visual progress charts (completion rates, XP over time) powered by `/api/stats`
 - [ ] **Habit Categories & Tags** - Organize habits with categories/tags and filter by them
 - [x] **Dark Mode** - Dark theme toggle using CSS variables (persisted, honors system preference)
-- [ ] **Mobile Responsiveness** - Improve layouts for small screens (cards, forms, navigation)
+- [x] **Mobile Responsiveness** - Responsive layouts at the 640px breakpoint (header, cards, forms, calendar)
 - [ ] **Notifications / Reminders UI** - Settings page for configuring habit reminders
-- [ ] **Data Export UI** - Button to export habit data as CSV or JSON
-- [ ] **Edit Habit** - UI for editing an existing habit (name, frequency, color, difficulty)
-- [ ] **User Profile Page** - View/edit profile info and see overall stats
+- [x] **Data Export UI** - Export CSV/JSON buttons on the Profile page
+- [x] **Edit Habit** - Edit an existing habit (name, description, frequency, color, XP)
+- [x] **User Profile Page** - Stats, edit username, change password, delete account
 
 ## Backend To-Do
 
@@ -202,7 +202,7 @@ PORT=5000
 - [x] **Statistics Endpoints** - Endpoints for aggregated stats (completion rates, XP trends)
 - [ ] **Categories/Tags Model** - Category/tag schema and association with habits
 - [ ] **Reminder System** - Scheduled notifications (email or push) for habit reminders
-- [ ] **Data Export Endpoint** - `GET /api/export` to generate CSV/JSON of user data
+- [x] **Data Export Endpoint** - `GET /api/export` (CSV/JSON of the user's data)
 - [ ] **Rate Limiting** - Rate limiting middleware to protect API endpoints
 - [ ] **Input Validation** - express-validator or similar for stricter request validation
 - [ ] **Password Reset** - Forgot password / reset flow with email
