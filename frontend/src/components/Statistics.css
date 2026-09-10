@@ -239,4 +239,12 @@
     grid-template-columns: 6rem 1fr auto;
     gap: 0.5rem;
   }
+
+  .stats-container {
+    padding: 1rem;
+  }
+
+  .chart-block {
+    padding: 0.75rem;
+  }
 }

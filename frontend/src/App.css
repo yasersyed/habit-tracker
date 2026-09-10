@@ -11,6 +11,8 @@
   justify-content: space-between;
   align-items: center;
   box-shadow: 0 2px 10px var(--shadow);
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
 .app-header h1 {
@@ -131,4 +133,13 @@
   align-items: center;
   min-height: 50vh;
   color: var(--text-tertiary);
+}
+
+@media (max-width: 640px) {
+  .app-header { padding: 1rem 1.25rem; }
+  .app-header h1 { font-size: 1.5rem; }
+  .header-actions { width: 100%; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; }
+  .app-nav { gap: 1rem; }
+  .header-user span { display: none; }
+  .app-footer { padding: 1rem 1.25rem 1.5rem; }
 }

@@ -94,3 +94,7 @@
 .auth-link a:hover {
   text-decoration: underline;
 }
+
+@media (max-width: 640px) {
+  .auth-card { padding: 24px; }
+}
