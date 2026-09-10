@@ -25,6 +25,30 @@
   color: var(--text-primary);
 }
 
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.edit-btn {
+  background: transparent;
+  color: var(--text-tertiary);
+  font-size: 1.1rem;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edit-btn:hover {
+  background: var(--surface-inset);
+  color: var(--text-secondary);
+}
+
 .delete-btn {
   background: transparent;
   color: var(--danger);

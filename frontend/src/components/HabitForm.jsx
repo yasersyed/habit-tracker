@@ -9,15 +9,31 @@ const COLORS = [
 
 const DIFFICULTIES = Object.keys(XP_TIERS);
 
-function HabitForm({ onSubmit, onCancel }) {
-  const [formData, setFormData] = useState({
+function HabitForm({ onSubmit, onCancel, initialValues = null, submitLabel = 'Create Habit', showPresets = true }) {
+  const defaultFormData = {
     name: '',
     description: '',
     frequency: 'daily',
     color: '#3b82f6',
     xpReward: XP_TIERS.Easy
-  });
-  const [selectedDifficulty, setSelectedDifficulty] = useState('Easy');
+  };
+
+  const [formData, setFormData] = useState(
+    initialValues
+      ? {
+          name: initialValues.name ?? defaultFormData.name,
+          description: initialValues.description ?? defaultFormData.description,
+          frequency: initialValues.frequency ?? defaultFormData.frequency,
+          color: initialValues.color ?? defaultFormData.color,
+          xpReward: initialValues.xpReward ?? defaultFormData.xpReward
+        }
+      : defaultFormData
+  );
+
+  const initialDifficulty = Object.keys(XP_TIERS).find(
+    (key) => XP_TIERS[key] === formData.xpReward
+  ) || 'Easy';
+  const [selectedDifficulty, setSelectedDifficulty] = useState(initialDifficulty);
   const [selectedPreset, setSelectedPreset] = useState('');
 
   const handleSubmit = (e) => {
@@ -63,17 +79,19 @@ function HabitForm({ onSubmit, onCancel }) {
 
   return (
     <form className="habit-form" onSubmit={handleSubmit}>
-      <div className="form-group">
-        <label>Habit Template</label>
-        <select value={selectedPreset} onChange={handlePresetChange}>
-          <option value="">Custom Habit</option>
-          {PRESET_HABITS.map(preset => (
-            <option key={preset.name} value={preset.name}>
-              {preset.name} — {preset.difficulty} ({preset.xpReward} XP)
-            </option>
-          ))}
-        </select>
-      </div>
+      {showPresets && (
+        <div className="form-group">
+          <label>Habit Template</label>
+          <select value={selectedPreset} onChange={handlePresetChange}>
+            <option value="">Custom Habit</option>
+            {PRESET_HABITS.map(preset => (
+              <option key={preset.name} value={preset.name}>
+                {preset.name} — {preset.difficulty} ({preset.xpReward} XP)
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <div className="form-group">
         <label>Habit Name *</label>
@@ -142,7 +160,7 @@ function HabitForm({ onSubmit, onCancel }) {
           Cancel
         </button>
         <button type="submit" className="btn-submit">
-          Create Habit
+          {submitLabel}
         </button>
       </div>
     </form>

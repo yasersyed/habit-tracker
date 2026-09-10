@@ -14,6 +14,7 @@ function HabitDashboard() {
   const [records, setRecords] = useState([]);
   const [streaks, setStreaks] = useState({});
   const [showForm, setShowForm] = useState(false);
+  const [editingHabit, setEditingHabit] = useState(null);
   const [userXp, setUserXp] = useState({ level: 1, xp: 0, totalXp: 0 });
   const { user } = useAuth();
 
@@ -73,6 +74,17 @@ function HabitDashboard() {
     } catch (error) {
       console.error('Error creating habit:', error);
       alert('Error creating habit');
+    }
+  };
+
+  const handleUpdateHabit = async (habitData) => {
+    try {
+      await habitAPI.update(editingHabit._id, habitData);
+      setEditingHabit(null);
+      loadHabits();
+    } catch (error) {
+      console.error('Error updating habit:', error);
+      alert('Error updating habit');
     }
   };
 
@@ -144,12 +156,23 @@ function HabitDashboard() {
 
       <div className="dashboard-header">
         <h2>Welcome, {user?.username}!</h2>
-        <button onClick={() => setShowForm(!showForm)}>
+        <button onClick={() => {
+          setEditingHabit(null);
+          setShowForm(!showForm);
+        }}>
           {showForm ? 'Cancel' : '+ Add Habit'}
         </button>
       </div>
 
-      {showForm && (
+      {editingHabit ? (
+        <HabitForm
+          initialValues={editingHabit}
+          submitLabel="Save Changes"
+          showPresets={false}
+          onSubmit={handleUpdateHabit}
+          onCancel={() => setEditingHabit(null)}
+        />
+      ) : showForm && (
         <HabitForm onSubmit={handleCreateHabit} onCancel={() => setShowForm(false)} />
       )}
 
@@ -167,6 +190,7 @@ function HabitDashboard() {
               streak={streaks[habit._id]}
               onToggle={() => handleToggleHabit(habit._id)}
               onDelete={() => handleDeleteHabit(habit._id)}
+              onEdit={() => setEditingHabit(habit)}
             />
           ))
         )}
