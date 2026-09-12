@@ -1,0 +1,60 @@
+# Full-stack production stack, pulling pre-built images from a registry
+# instead of building them locally. Use this on a host that just needs to
+# *run* the app (no git clone / build step needed) — copy this file (and
+# .env.prod.example) to the server and start it.
+#
+#   cp .env.prod.example .env    # then edit the secrets
+#   docker compose -f docker-compose.hub.yml up -d
+#
+# Image names/tag are overridable via .env — defaults point at the images
+# published from this repo:
+#   BACKEND_IMAGE=yaserftw/habit-tracker-backend
+#   FRONTEND_IMAGE=yaserftw/habit-tracker-frontend
+#   IMAGE_TAG=0.2.0
+#
+# The frontend (nginx, port 80) serves the built SPA and proxies /api to the
+# backend, so the app is same-origin — only port 80 is exposed publicly.
+services:
+  mongodb:
+    image: mongo:7.0
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - habit-tracker
+    # Not published to the host — only the backend reaches it over the network.
+
+  # Service name must be "backend-service" to match the nginx upstream in
+  # frontend/nginx.conf (baked into the frontend image).
+  backend-service:
+    image: ${BACKEND_IMAGE:-yaserftw/habit-tracker-backend}:${IMAGE_TAG:-0.2.0}
+    restart: unless-stopped
+    environment:
+      MONGODB_URI: mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/${MONGO_DB:-habit_tracker}?authSource=admin
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+      PORT: "5000"
+    depends_on:
+      - mongodb
+    networks:
+      - habit-tracker
+
+  frontend:
+    image: ${FRONTEND_IMAGE:-yaserftw/habit-tracker-frontend}:${IMAGE_TAG:-0.2.0}
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend-service
+    networks:
+      - habit-tracker
+
+volumes:
+  mongodb_data:
+
+networks:
+  habit-tracker:

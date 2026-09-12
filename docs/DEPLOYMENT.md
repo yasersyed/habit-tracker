@@ -73,6 +73,26 @@ docker compose -f docker-compose.prod.yml up -d --build
 
 Open **`http://<PUBLIC_IP>/`** — that's the link to share with testers.
 
+### Alternative: pull pre-built images instead of building
+If images have already been pushed to a registry (see
+[Building and pushing images](#building-and-pushing-images) below), the server
+doesn't need the full repo or a build step — just the two compose files:
+
+```bash
+mkdir habit-tracker && cd habit-tracker
+curl -O https://raw.githubusercontent.com/yasersyed/habit-tracker/master/docker-compose.hub.yml
+curl -O https://raw.githubusercontent.com/yasersyed/habit-tracker/master/.env.prod.example
+cp .env.prod.example .env
+nano .env   # same secrets as above
+
+docker compose -f docker-compose.hub.yml up -d
+```
+This is faster to start (no build) and is what a CI pipeline would deploy after
+pushing new images. `docker-compose.hub.yml` defaults to
+`yaserftw/habit-tracker-{backend,frontend}:0.2.0`; override via `.env` with
+`BACKEND_IMAGE`, `FRONTEND_IMAGE`, and `IMAGE_TAG` to point at a fork's images
+or a different version.
+
 ---
 
 ## Deploy on AWS Lightsail
@@ -82,22 +102,66 @@ steps 2–5 above.
 
 ---
 
+## Building and pushing images
+
+To deploy with `docker-compose.hub.yml` (pull-only, no build on the server),
+build and push the two images to a registry first, from the repo root:
+
+```bash
+export REGISTRY="<your-dockerhub-username>"   # or ghcr.io/<github-username>
+export VERSION="0.2.0"                          # matches this repo's version
+
+docker login   # or: echo "$GHCR_PAT" | docker login ghcr.io -u <user> --password-stdin
+
+docker build -f backend/Dockerfile \
+  -t "$REGISTRY/habit-tracker-backend:$VERSION" -t "$REGISTRY/habit-tracker-backend:latest" .
+docker build -f frontend/Dockerfile \
+  -t "$REGISTRY/habit-tracker-frontend:$VERSION" -t "$REGISTRY/habit-tracker-frontend:latest" .
+
+docker push "$REGISTRY/habit-tracker-backend:$VERSION"
+docker push "$REGISTRY/habit-tracker-backend:latest"
+docker push "$REGISTRY/habit-tracker-frontend:$VERSION"
+docker push "$REGISTRY/habit-tracker-frontend:latest"
+```
+
+Building on Apple Silicon but deploying to a normal x86 server? Build
+multi-arch instead (builds *and* pushes in one step):
+```bash
+docker buildx create --use --name htbuilder 2>/dev/null || docker buildx use htbuilder
+docker buildx build --platform linux/amd64,linux/arm64 -f backend/Dockerfile \
+  -t "$REGISTRY/habit-tracker-backend:$VERSION" -t "$REGISTRY/habit-tracker-backend:latest" --push .
+docker buildx build --platform linux/amd64,linux/arm64 -f frontend/Dockerfile \
+  -t "$REGISTRY/habit-tracker-frontend:$VERSION" -t "$REGISTRY/habit-tracker-frontend:latest" --push .
+```
+
+Then set `BACKEND_IMAGE`/`FRONTEND_IMAGE`/`IMAGE_TAG` in `.env` (or edit
+`docker-compose.hub.yml`'s defaults) to match, and deploy with
+`docker-compose.hub.yml` as shown above.
+
+---
+
 ## Operating it
 
 ```bash
-# Logs
-docker compose -f docker-compose.prod.yml logs -f
+# Pick the compose file that matches how you deployed:
+#   docker-compose.prod.yml  — built the images on the server
+#   docker-compose.hub.yml   — pulled pre-built images from a registry
+COMPOSE_FILE=docker-compose.prod.yml   # or docker-compose.hub.yml
 
-# Update to the latest code
-git pull
-docker compose -f docker-compose.prod.yml up -d --build
+# Logs
+docker compose -f "$COMPOSE_FILE" logs -f
+
+# Update: rebuild from source, or pull the latest pushed images
+git pull && docker compose -f docker-compose.prod.yml up -d --build
+# — or, for the hub file —
+docker compose -f docker-compose.hub.yml pull && docker compose -f docker-compose.hub.yml up -d
 
 # Stop / start
-docker compose -f docker-compose.prod.yml down
-docker compose -f docker-compose.prod.yml up -d
+docker compose -f "$COMPOSE_FILE" down
+docker compose -f "$COMPOSE_FILE" up -d
 
 # Back up the database
-docker compose -f docker-compose.prod.yml exec mongodb \
+docker compose -f "$COMPOSE_FILE" exec mongodb \
   mongodump --username "$MONGO_ROOT_USERNAME" --password "$MONGO_ROOT_PASSWORD" \
   --authenticationDatabase admin --archive > backup-$(date +%F).archive
 ```
@@ -135,9 +199,20 @@ A record pointing at the server. Preferred approach — **Caddy reverse proxy**:
 The manifests (`kube/`, kustomize base + dev/prod overlays) already cover
 Deployments, Services, MongoDB PVC, health probes, secrets, and configmap.
 To run on a real cluster:
-- **Images:** push `habit-tracker-backend` / `-frontend` to a registry
-  (Docker Hub / GHCR / cloud registry) and set them via a kustomize `images:`
-  override with a pinned tag (not `latest`).
+- **Images:** ✅ done — `yaserftw/habit-tracker-backend` / `-frontend` are
+  published on Docker Hub (see [Building and pushing images](#building-and-pushing-images)).
+  Still needed: point the manifests at them via a kustomize `images:` override
+  in `kube/overlays/prod/kustomization.yaml` with a pinned tag (not `latest`),
+  e.g.:
+  ```yaml
+  images:
+    - name: habit-tracker-backend
+      newName: yaserftw/habit-tracker-backend
+      newTag: "0.2.0"
+    - name: habit-tracker-frontend
+      newName: yaserftw/habit-tracker-frontend
+      newTag: "0.2.0"
+  ```
 - **Secrets:** replace the plaintext placeholders in `kube/base/secrets.yaml`
   with real values created out-of-band (`kubectl create secret`,
   sealed-secrets, or an external secrets operator) — keep them out of git.
