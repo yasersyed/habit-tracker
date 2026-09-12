@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-12
+
 ### Added
 - Habit color wheel: an HSV wheel with a brightness slider for choosing any
   habit color beyond the preset swatches; it closes on an outside click or
@@ -70,6 +72,7 @@ testing (pre-1.0 — expect changes).
   (version also included in `/api/health`), an in-app version footer, a
   `npm run bump` script, and a `npm run check:version` guard.
 
-[Unreleased]: https://github.com/yasersyed/habit-tracker/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/yasersyed/habit-tracker/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/yasersyed/habit-tracker/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/yasersyed/habit-tracker/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/yasersyed/habit-tracker/releases/tag/v0.1.0
