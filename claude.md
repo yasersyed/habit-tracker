@@ -163,6 +163,14 @@ PORT=5000
 3. Start frontend: `cd frontend && npm run dev`
 4. Access app at `http://localhost:3000`
 
+## Branch Naming
+
+- Feature/fix branches use a zero-padded sequence: `ht-001`, `ht-002`, `ht-003`, …
+  Pick the next unused number by checking existing branches (e.g. `git branch -a`)
+  and incrementing the highest `ht-NNN` seen.
+- **Release branches are the exception**: name them after the release version
+  instead of the sequence (e.g. `v0.2.0`).
+
 ## Important Notes
 
 - **Date Handling**: HabitRecord dates are normalized to midnight UTC to ensure one record per day
