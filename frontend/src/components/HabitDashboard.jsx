@@ -6,7 +6,6 @@ import { xpForLevel } from '../../../shared/xp.js';
 import HabitForm from './HabitForm';
 import HabitCard from './HabitCard';
 import CompletionHeatmap from './CompletionHeatmap';
-import Statistics from './Statistics';
 import './HabitDashboard.css';
 
 function HabitDashboard() {
@@ -175,8 +174,6 @@ function HabitDashboard() {
       ) : showForm && (
         <HabitForm onSubmit={handleCreateHabit} onCancel={() => setShowForm(false)} />
       )}
-
-      <Statistics refreshKey={`${records.length}-${habits.length}`} />
 
       <div className="habits-grid">
         {habits.length === 0 ? (

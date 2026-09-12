@@ -176,7 +176,7 @@ function Kpi({ value, label }) {
   );
 }
 
-function Statistics({ refreshKey }) {
+function Statistics() {
   const [days, setDays] = useState(30);
   const [summary, setSummary] = useState(null);
   const [daily, setDaily] = useState([]);
@@ -206,7 +206,7 @@ function Statistics({ refreshKey }) {
     };
     load();
     return () => { cancelled = true; };
-  }, [days, refreshKey]);
+  }, [days]);
 
   const xpSeries = daily.map((d) => ({ date: d.date, value: d.cumulativeXp }));
   const completionSeries = daily.map((d) => ({ date: d.date, value: d.completions }));
