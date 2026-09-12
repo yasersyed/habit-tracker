@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { recordAPI } from '../services/api';
-import { localDateString } from '../utils/date';
+import { localDateString, utcDateString } from '../utils/date';
 import './CompletionHeatmap.css';
 
 const WEEKS_TO_SHOW = 15;
@@ -96,7 +96,7 @@ function CompletionHeatmap() {
       const counts = {};
       for (const record of response.data) {
         if (record.completed) {
-          const key = localDateString(new Date(record.date));
+          const key = utcDateString(record.date);
           counts[key] = (counts[key] || 0) + 1;
         }
       }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { habitAPI, recordAPI, statsAPI } from '../services/api';
-import { localDateString } from '../utils/date';
+import { localDateString, utcDateString } from '../utils/date';
 import './Calendar.css';
 
 const MONTHS = [
@@ -52,7 +52,7 @@ function Calendar() {
         const map = new Map();
         for (const record of response.data) {
           if (record.completed) {
-            map.set(localDateString(new Date(record.date)), record._id);
+            map.set(utcDateString(record.date), record._id);
           }
         }
         setCompleted(map);
