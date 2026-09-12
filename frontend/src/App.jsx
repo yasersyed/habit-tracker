@@ -6,6 +6,7 @@ import Login from './components/Login';
 import Signup from './components/Signup';
 import HabitDashboard from './components/HabitDashboard';
 import Calendar from './components/Calendar';
+import Statistics from './components/Statistics';
 import Profile from './components/Profile';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
@@ -34,6 +35,7 @@ function App() {
             <nav className="app-nav">
               <NavLink to="/" end className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Dashboard</NavLink>
               <NavLink to="/calendar" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Calendar</NavLink>
+              <NavLink to="/statistics" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Statistics</NavLink>
               <NavLink to="/profile" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Profile</NavLink>
             </nav>
           )}
@@ -77,6 +79,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Calendar />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/statistics"
+            element={
+              <ProtectedRoute>
+                <Statistics />
               </ProtectedRoute>
             }
           />

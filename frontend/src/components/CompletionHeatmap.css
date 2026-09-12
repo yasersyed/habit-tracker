@@ -36,7 +36,7 @@
 .stat-value {
   font-size: 1.15rem;
   font-weight: 700;
-  color: var(--brand-purple);
+  color: var(--brand-green);
   line-height: 1;
 }
 
@@ -112,7 +112,7 @@
 }
 
 .heatmap-cell:hover {
-  outline: 2px solid var(--brand-purple);
+  outline: 2px solid var(--brand-green);
   outline-offset: -1px;
 }
 
@@ -126,19 +126,19 @@
 }
 
 .heatmap-cell.intensity-1 {
-  background: #c4b5fd;
+  background: #6ee7b7;
 }
 
 .heatmap-cell.intensity-2 {
-  background: #a78bfa;
+  background: #34d399;
 }
 
 .heatmap-cell.intensity-3 {
-  background: #8b5cf6;
+  background: #10b981;
 }
 
 .heatmap-cell.intensity-4 {
-  background: #7c3aed;
+  background: #059669;
 }
 
 .heatmap-cell.today {

@@ -164,6 +164,10 @@
   color: var(--text-tertiary);
 }
 
+.track-btn-wrap {
+  position: relative;
+}
+
 .track-btn {
   width: 100%;
   padding: 0.75rem;
@@ -184,4 +188,38 @@
 
 .track-btn.completed:hover {
   background: var(--success-strong);
+}
+
+/* Gold star that pops out of the button when a habit is marked complete. */
+.star-burst {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  font-size: 2rem;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  /* Gold glow so the emoji reads as a reward even on colored buttons. */
+  filter: drop-shadow(0 0 6px #ffd24d);
+  animation: star-burst 0.7s ease-out forwards;
+}
+
+@keyframes star-burst {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.3) rotate(-30deg);
+  }
+  40% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.4) rotate(10deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -140%) scale(1) rotate(0deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .star-burst {
+    animation-duration: 0.01ms;
+  }
 }

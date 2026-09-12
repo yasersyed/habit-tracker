@@ -5,6 +5,28 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.3.0] - 2026-09-12
+
+### Added
+- Habit color wheel: an HSV wheel with a brightness slider for choosing any
+  habit color beyond the preset swatches; it closes on an outside click or
+  Escape.
+- A gold-star animation plays when a habit is marked complete (respects
+  `prefers-reduced-motion`).
+
+### Changed
+- Statistics moved from the dashboard into its own tab (`/statistics`).
+- Recolored the brand accent from purple to emerald green throughout — accents,
+  the header/auth gradient, the XP chart, and the heatmap/calendar intensity
+  ramps.
+
+### Fixed
+- Calendar and heatmap marked completions on the previous day for users in
+  timezones behind UTC; stored dates (UTC-midnight day markers) are now read
+  back with UTC components so they align with the day tapped.
+
 ## [0.2.0] - 2026-09-11
 
 ### Added
@@ -50,5 +72,7 @@ testing (pre-1.0 — expect changes).
   (version also included in `/api/health`), an in-app version footer, a
   `npm run bump` script, and a `npm run check:version` guard.
 
-[Unreleased]: https://github.com/yasersyed/habit-tracker/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/yasersyed/habit-tracker/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/yasersyed/habit-tracker/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/yasersyed/habit-tracker/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/yasersyed/habit-tracker/releases/tag/v0.1.0

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { PRESET_HABITS, XP_TIERS } from '../data/presetHabits';
+import ColorWheel from './ColorWheel';
 import './HabitForm.css';
 
 const COLORS = [
@@ -151,6 +152,11 @@ function HabitForm({ onSubmit, onCancel, initialValues = null, submitLabel = 'Cr
                 onClick={() => setFormData({ ...formData, color })}
               />
             ))}
+            {/* Color wheel for any color beyond the preset swatches. */}
+            <ColorWheel
+              value={formData.color}
+              onChange={(color) => setFormData({ ...formData, color })}
+            />
           </div>
         </div>
       </div>

@@ -3,9 +3,16 @@ import './HabitCard.css';
 
 function HabitCard({ habit, isCompleted, streak, onToggle, onDelete, onEdit }) {
   const [showCurrent, setShowCurrent] = useState(false);
+  const [celebrate, setCelebrate] = useState(false);
   const { current = 0, longest = 0 } = streak || {};
 
   const dayLabel = (n) => (n === 1 ? 'day' : 'days');
+
+  // Celebrate only the completing action, not un-marking.
+  const handleToggle = () => {
+    if (!isCompleted) setCelebrate(true);
+    onToggle();
+  };
 
   return (
     <div className="habit-card" style={{ borderLeftColor: habit.color }}>
@@ -62,12 +69,23 @@ function HabitCard({ habit, isCompleted, streak, onToggle, onDelete, onEdit }) {
         )}
       </div>
 
-      <button
-        className={`track-btn ${isCompleted ? 'completed' : ''}`}
-        onClick={onToggle}
-      >
-        {isCompleted ? '✓ Completed Today' : 'Mark as Complete'}
-      </button>
+      <div className="track-btn-wrap">
+        <button
+          className={`track-btn ${isCompleted ? 'completed' : ''}`}
+          onClick={handleToggle}
+        >
+          {isCompleted ? '✓ Completed Today' : 'Mark as Complete'}
+        </button>
+        {celebrate && (
+          <span
+            className="star-burst"
+            aria-hidden="true"
+            onAnimationEnd={() => setCelebrate(false)}
+          >
+            ⭐
+          </span>
+        )}
+      </div>
     </div>
   );
 }

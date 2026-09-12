@@ -176,7 +176,7 @@ function Kpi({ value, label }) {
   );
 }
 
-function Statistics({ refreshKey }) {
+function Statistics() {
   const [days, setDays] = useState(30);
   const [summary, setSummary] = useState(null);
   const [daily, setDaily] = useState([]);
@@ -206,7 +206,7 @@ function Statistics({ refreshKey }) {
     };
     load();
     return () => { cancelled = true; };
-  }, [days, refreshKey]);
+  }, [days]);
 
   const xpSeries = daily.map((d) => ({ date: d.date, value: d.cumulativeXp }));
   const completionSeries = daily.map((d) => ({ date: d.date, value: d.completions }));
@@ -244,7 +244,7 @@ function Statistics({ refreshKey }) {
 
           <div className="chart-block">
             <h4 className="chart-title">XP earned <span className="chart-subtitle">(cumulative)</span></h4>
-            <TimeSeriesChart data={xpSeries} mode="area" color="#7c3aed" />
+            <TimeSeriesChart data={xpSeries} mode="area" color="#059669" />
           </div>
 
           <div className="chart-block">

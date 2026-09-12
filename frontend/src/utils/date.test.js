@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { localDateString, localTomorrowString } from './date.js';
+import { localDateString, localTomorrowString, utcDateString } from './date.js';
 
 describe('localDateString', () => {
   test('should format date as YYYY-MM-DD in local timezone', () => {
@@ -31,6 +31,24 @@ describe('localDateString', () => {
     const localResult = localDateString(d);
     // Local date should always be Jan 15 regardless of UTC offset
     expect(localResult).toBe('2024-01-15');
+  });
+});
+
+describe('utcDateString', () => {
+  test('should read the calendar day from a UTC-midnight marker', () => {
+    // Backend stores record dates at UTC midnight; the day label must survive.
+    expect(utcDateString('2024-01-15T00:00:00.000Z')).toBe('2024-01-15');
+  });
+
+  test('should not shift the day for viewers behind UTC', () => {
+    // UTC midnight is still the previous evening locally in negative offsets;
+    // reading UTC components keeps the intended calendar day.
+    const d = new Date('2024-01-15T00:00:00.000Z');
+    expect(utcDateString(d)).toBe('2024-01-15');
+  });
+
+  test('should pad single-digit month and day', () => {
+    expect(utcDateString('2024-03-05T00:00:00.000Z')).toBe('2024-03-05');
   });
 });
 
