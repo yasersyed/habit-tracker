@@ -48,45 +48,6 @@
   transform: scale(1.1);
 }
 
-/* Color-wheel swatch: a conic-gradient ring framing the native picker. */
-.color-wheel {
-  position: relative;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: transform 0.2s;
-  /* Rainbow ring makes it read as "any color" next to the fixed swatches. */
-  box-shadow: 0 0 0 3px var(--surface-2),
-    0 0 0 5px transparent;
-  background-image: conic-gradient(red, yellow, lime, cyan, blue, magenta, red);
-}
-
-.color-wheel:hover {
-  transform: scale(1.1);
-}
-
-/* The chosen color fills the center; the ring stays visible around it. */
-.color-wheel::after {
-  content: '';
-  position: absolute;
-  inset: 6px;
-  border-radius: 50%;
-  background-color: inherit;
-}
-
-.color-wheel input[type="color"] {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  margin: 0;
-  padding: 0;
-  border: none;
-  cursor: pointer;
-}
-
 .form-actions {
   display: flex;
   gap: 1rem;
