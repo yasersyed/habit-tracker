@@ -244,7 +244,7 @@ function Statistics() {
 
           <div className="chart-block">
             <h4 className="chart-title">XP earned <span className="chart-subtitle">(cumulative)</span></h4>
-            <TimeSeriesChart data={xpSeries} mode="area" color="#7c3aed" />
+            <TimeSeriesChart data={xpSeries} mode="area" color="#059669" />
           </div>
 
           <div className="chart-block">

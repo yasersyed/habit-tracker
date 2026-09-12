@@ -91,7 +91,7 @@
 }
 
 .cal-cell.today {
-  outline: 2px solid var(--brand-purple);
+  outline: 2px solid var(--brand-green);
   outline-offset: -2px;
 }
 
@@ -118,22 +118,22 @@
 }
 
 .cal-cell.intensity-1 {
-  background: #c4b5fd;
+  background: #6ee7b7;
   color: var(--text-primary);
 }
 
 .cal-cell.intensity-2 {
-  background: #a78bfa;
+  background: #34d399;
   color: var(--text-primary);
 }
 
 .cal-cell.intensity-3 {
-  background: #8b5cf6;
+  background: #10b981;
   color: #fff;
 }
 
 .cal-cell.intensity-4 {
-  background: #7c3aed;
+  background: #059669;
   color: #fff;
 }
 
