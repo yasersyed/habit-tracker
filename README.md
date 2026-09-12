@@ -228,8 +228,8 @@ The application includes Kubernetes manifests using Kustomize with base + overla
 ### Build Docker Images
 
 ```bash
-docker build -t habit-tracker-backend ./backend
-docker build -t habit-tracker-frontend ./frontend
+docker buildx build -t habit-tracker-backend ./backend
+docker buildx build -t habit-tracker-frontend ./frontend
 ```
 
 ### Deploy to Dev (NodePort)
