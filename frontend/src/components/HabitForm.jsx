@@ -151,6 +151,20 @@ function HabitForm({ onSubmit, onCancel, initialValues = null, submitLabel = 'Cr
                 onClick={() => setFormData({ ...formData, color })}
               />
             ))}
+            {/* Color wheel for any color beyond the preset swatches. */}
+            <label
+              className="color-wheel"
+              style={{ backgroundColor: formData.color }}
+              title="Pick a custom color"
+            >
+              <input
+                type="color"
+                name="color"
+                value={formData.color}
+                onChange={handleChange}
+                aria-label="Custom color"
+              />
+            </label>
           </div>
         </div>
       </div>
