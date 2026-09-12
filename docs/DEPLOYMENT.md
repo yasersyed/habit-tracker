@@ -89,7 +89,7 @@ docker compose -f docker-compose.hub.yml up -d
 ```
 This is faster to start (no build) and is what a CI pipeline would deploy after
 pushing new images. `docker-compose.hub.yml` defaults to
-`yaserftw/habit-tracker-{backend,frontend}:0.2.0`; override via `.env` with
+`yaserftw/habit-tracker-{backend,frontend}:0.3.0`; override via `.env` with
 `BACKEND_IMAGE`, `FRONTEND_IMAGE`, and `IMAGE_TAG` to point at a fork's images
 or a different version.
 
@@ -109,13 +109,16 @@ build and push the two images to a registry first, from the repo root:
 
 ```bash
 export REGISTRY="<your-dockerhub-username>"   # or ghcr.io/<github-username>
-export VERSION="0.2.0"                          # matches this repo's version
+export VERSION="0.3.0"                          # matches this repo's version
 
 docker login   # or: echo "$GHCR_PAT" | docker login ghcr.io -u <user> --password-stdin
 
-docker build -f backend/Dockerfile \
+# buildx (BuildKit) with the default builder — the legacy `docker build` is
+# deprecated. The default builder uses the local daemon, so images land in your
+# image store and DNS behaves like a normal pull.
+docker buildx build -f backend/Dockerfile \
   -t "$REGISTRY/habit-tracker-backend:$VERSION" -t "$REGISTRY/habit-tracker-backend:latest" .
-docker build -f frontend/Dockerfile \
+docker buildx build -f frontend/Dockerfile \
   -t "$REGISTRY/habit-tracker-frontend:$VERSION" -t "$REGISTRY/habit-tracker-frontend:latest" .
 
 docker push "$REGISTRY/habit-tracker-backend:$VERSION"
@@ -208,10 +211,10 @@ To run on a real cluster:
   images:
     - name: habit-tracker-backend
       newName: yaserftw/habit-tracker-backend
-      newTag: "0.2.0"
+      newTag: "0.3.0"
     - name: habit-tracker-frontend
       newName: yaserftw/habit-tracker-frontend
-      newTag: "0.2.0"
+      newTag: "0.3.0"
   ```
 - **Secrets:** replace the plaintext placeholders in `kube/base/secrets.yaml`
   with real values created out-of-band (`kubectl create secret`,

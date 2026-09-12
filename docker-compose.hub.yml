@@ -10,7 +10,7 @@
 # published from this repo:
 #   BACKEND_IMAGE=yaserftw/habit-tracker-backend
 #   FRONTEND_IMAGE=yaserftw/habit-tracker-frontend
-#   IMAGE_TAG=0.2.0
+#   IMAGE_TAG=0.3.0
 #
 # The frontend (nginx, port 80) serves the built SPA and proxies /api to the
 # backend, so the app is same-origin — only port 80 is exposed publicly.
@@ -30,7 +30,7 @@ services:
   # Service name must be "backend-service" to match the nginx upstream in
   # frontend/nginx.conf (baked into the frontend image).
   backend-service:
-    image: ${BACKEND_IMAGE:-yaserftw/habit-tracker-backend}:${IMAGE_TAG:-0.2.0}
+    image: ${BACKEND_IMAGE:-yaserftw/habit-tracker-backend}:${IMAGE_TAG:-0.3.0}
     restart: unless-stopped
     environment:
       MONGODB_URI: mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/${MONGO_DB:-habit_tracker}?authSource=admin
@@ -44,7 +44,7 @@ services:
       - habit-tracker
 
   frontend:
-    image: ${FRONTEND_IMAGE:-yaserftw/habit-tracker-frontend}:${IMAGE_TAG:-0.2.0}
+    image: ${FRONTEND_IMAGE:-yaserftw/habit-tracker-frontend}:${IMAGE_TAG:-0.3.0}
     restart: unless-stopped
     ports:
       - "80:80"
