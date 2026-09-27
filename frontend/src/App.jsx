@@ -8,6 +8,7 @@ import HabitDashboard from './components/HabitDashboard';
 import Calendar from './components/Calendar';
 import Statistics from './components/Statistics';
 import Profile from './components/Profile';
+import ArchivedHabits from './components/ArchivedHabits';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
@@ -37,6 +38,7 @@ function App() {
               <NavLink to="/calendar" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Calendar</NavLink>
               <NavLink to="/statistics" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Statistics</NavLink>
               <NavLink to="/profile" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Profile</NavLink>
+              <NavLink to="/archived" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Archived</NavLink>
             </nav>
           )}
           <button
@@ -95,6 +97,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/archived"
+            element={
+              <ProtectedRoute>
+                <ArchivedHabits />
               </ProtectedRoute>
             }
           />

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './HabitCard.css';
 
-function HabitCard({ habit, isCompleted, streak, onToggle, onDelete, onEdit }) {
+function HabitCard({ habit, isCompleted, streak, onToggle, onArchive, onEdit }) {
   const [showCurrent, setShowCurrent] = useState(false);
   const [celebrate, setCelebrate] = useState(false);
   const { current = 0, longest = 0 } = streak || {};
@@ -20,7 +20,7 @@ function HabitCard({ habit, isCompleted, streak, onToggle, onDelete, onEdit }) {
         <h3>{habit.name}</h3>
         <div className="card-actions">
           <button className="edit-btn" onClick={onEdit} aria-label="Edit habit" title="Edit habit">✎</button>
-          <button className="delete-btn" onClick={onDelete} aria-label="Delete habit">×</button>
+          <button className="archive-btn" onClick={onArchive} aria-label="Archive habit" title="Archive habit">📦</button>
         </div>
       </div>
 

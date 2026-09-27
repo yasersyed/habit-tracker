@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Habit Archiving: archive a habit from its card (📦) to remove it from the
+  dashboard without losing its history — records, earned XP, stats, and
+  exports are unaffected. A new `/archived` page lists archived habits with
+  options to unarchive or permanently delete them. Backend: `PUT
+  /api/habits/:id/archive` and `/unarchive`, and `GET /api/habits?archived=true`.
+
 ## [0.3.0] - 2026-09-12
 
 ### Added

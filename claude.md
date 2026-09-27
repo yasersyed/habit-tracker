@@ -203,6 +203,7 @@ PORT=5000
 - [x] **Data Export UI** - Export CSV/JSON buttons on the Profile page
 - [x] **Edit Habit** - Edit an existing habit (name, description, frequency, color, XP)
 - [x] **User Profile Page** - Stats, edit username, change password, delete account
+- [x] **Habit Archiving UI** - Archive button on habit cards; `/archived` page to unarchive or permanently delete
 
 ## Backend To-Do
 
@@ -211,8 +212,8 @@ PORT=5000
 - [ ] **Categories/Tags Model** - Category/tag schema and association with habits
 - [ ] **Reminder System** - Scheduled notifications (email or push) for habit reminders
 - [x] **Data Export Endpoint** - `GET /api/export` (CSV/JSON of the user's data)
-- [ ] **Rate Limiting** - Rate limiting middleware to protect API endpoints
-- [ ] **Input Validation** - express-validator or similar for stricter request validation
+- [x] **Rate Limiting** - `express-rate-limit` on auth login/register; not yet applied to other endpoints
+- [x] **Input Validation** - `express-validator` used across all routes (auth, habits, records, stats, export, users)
 - [ ] **Password Reset** - Forgot password / reset flow with email
-- [ ] **Habit Archiving** - Soft-delete / archive habits instead of permanent deletion
-- [ ] **Pagination** - Pagination for habits and records list endpoints
+- [x] **Habit Archiving** - Archive/unarchive endpoints; archived habits keep all history but drop out of the default list
+- [x] **Pagination** - `paginationQueryValidators`/`parsePaginationQuery` used on habits and records list endpoints

@@ -459,4 +459,142 @@ describe('Habit Routes', () => {
       expect(habitStillExists).not.toBeNull();
     });
   });
+
+  describe('Archiving', () => {
+    test('PUT /api/habits/:id/archive should archive a habit', async () => {
+      const habit = await Habit.create({
+        userId: testUser._id,
+        name: 'Test Habit'
+      });
+
+      const response = await request(app)
+        .put(`/api/habits/${habit._id}/archive`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.archived).toBe(true);
+      expect(response.body.archivedAt).not.toBeNull();
+
+      const archivedHabit = await Habit.findById(habit._id);
+      expect(archivedHabit.archived).toBe(true);
+      expect(archivedHabit.archivedAt).not.toBeNull();
+    });
+
+    test('PUT /api/habits/:id/unarchive should unarchive an archived habit', async () => {
+      const habit = await Habit.create({
+        userId: testUser._id,
+        name: 'Test Habit',
+        archived: true,
+        archivedAt: new Date()
+      });
+
+      const response = await request(app)
+        .put(`/api/habits/${habit._id}/unarchive`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.archived).toBe(false);
+      expect(response.body.archivedAt).toBeNull();
+
+      const unarchivedHabit = await Habit.findById(habit._id);
+      expect(unarchivedHabit.archived).toBe(false);
+      expect(unarchivedHabit.archivedAt).toBeNull();
+    });
+
+    test('GET /api/habits should exclude archived habits by default', async () => {
+      await Habit.create([
+        { userId: testUser._id, name: 'Active Habit' },
+        { userId: testUser._id, name: 'Archived Habit', archived: true, archivedAt: new Date() }
+      ]);
+
+      const response = await request(app)
+        .get('/api/habits')
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveLength(1);
+      expect(response.body[0].name).toBe('Active Habit');
+      expect(response.headers['x-total-count']).toBe('1');
+    });
+
+    test('GET /api/habits?archived=true should return only archived habits', async () => {
+      await Habit.create([
+        { userId: testUser._id, name: 'Active Habit' },
+        { userId: testUser._id, name: 'Archived Habit', archived: true, archivedAt: new Date() }
+      ]);
+
+      const response = await request(app)
+        .get('/api/habits')
+        .query({ archived: 'true' })
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveLength(1);
+      expect(response.body[0].name).toBe('Archived Habit');
+      expect(response.body[0].archived).toBe(true);
+    });
+
+    test('should return 400 for invalid archived query value', async () => {
+      const response = await request(app)
+        .get('/api/habits')
+        .query({ archived: 'maybe' })
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(400);
+    });
+
+    test('PUT /api/habits/:id/archive should return 404 for non-existent habit', async () => {
+      const fakeId = '507f1f77bcf86cd799439011';
+      const response = await request(app)
+        .put(`/api/habits/${fakeId}/archive`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(404);
+      expect(response.body.message).toBe('Habit not found');
+    });
+
+    test('PUT /api/habits/:id/archive should return 404 for habit belonging to other user', async () => {
+      const otherAuth = await createAuthenticatedUser({
+        username: 'otheruser',
+        email: 'other@example.com'
+      });
+
+      const habit = await Habit.create({
+        userId: otherAuth.user._id,
+        name: 'Other User Habit'
+      });
+
+      const response = await request(app)
+        .put(`/api/habits/${habit._id}/archive`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(404);
+
+      const habitUnchanged = await Habit.findById(habit._id);
+      expect(habitUnchanged.archived).toBe(false);
+    });
+
+    test('PUT /api/habits/:id/unarchive should return 404 for habit belonging to other user', async () => {
+      const otherAuth = await createAuthenticatedUser({
+        username: 'otheruser',
+        email: 'other@example.com'
+      });
+
+      const habit = await Habit.create({
+        userId: otherAuth.user._id,
+        name: 'Other User Habit',
+        archived: true,
+        archivedAt: new Date()
+      });
+
+      const response = await request(app)
+        .put(`/api/habits/${habit._id}/unarchive`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(404);
+
+      const habitUnchanged = await Habit.findById(habit._id);
+      expect(habitUnchanged.archived).toBe(true);
+    });
+  });
 });

@@ -49,6 +49,24 @@
   color: var(--text-secondary);
 }
 
+.archive-btn {
+  background: transparent;
+  color: var(--text-tertiary);
+  font-size: 1rem;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.archive-btn:hover {
+  background: var(--surface-inset);
+  color: var(--text-secondary);
+}
+
 .delete-btn {
   background: transparent;
   color: var(--danger);

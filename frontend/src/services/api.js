@@ -42,10 +42,13 @@ export const userAPI = {
 
 // Habit API
 export const habitAPI = {
-  getAll: () => api.get('/habits'),
+  getAll: ({ archived } = {}) =>
+    api.get(`/habits${archived ? '?archived=true' : ''}`),
   getById: (id) => api.get(`/habits/${id}`),
   create: (data) => api.post('/habits', data),
   update: (id, data) => api.put(`/habits/${id}`, data),
+  archive: (id) => api.put(`/habits/${id}/archive`),
+  unarchive: (id) => api.put(`/habits/${id}/unarchive`),
   delete: (id) => api.delete(`/habits/${id}`),
   // `today` anchors the current-streak boundary to the client's local day.
   getStreaks: (today) => api.get(`/habits/streaks?today=${today}`),
