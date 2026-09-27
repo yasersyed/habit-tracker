@@ -1,0 +1,84 @@
+.archived-page {
+  max-width: 800px;
+  margin: 0 auto;
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 2rem;
+  box-shadow: 0 2px 10px var(--shadow);
+}
+
+.archived-loading,
+.no-archived {
+  color: var(--text-muted);
+  text-align: center;
+  padding: 3rem 1rem;
+}
+
+.archived-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.archived-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  flex-wrap: wrap;
+}
+
+.archived-color {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.archived-info {
+  flex: 1;
+  min-width: 180px;
+}
+
+.archived-info h3 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.05rem;
+  color: var(--text-primary);
+}
+
+.archived-meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-transform: none;
+}
+
+.archived-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.delete-btn-text {
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid var(--danger);
+  padding: 0.5rem 1rem;
+}
+
+.delete-btn-text:hover {
+  background: var(--danger-bg);
+}
+
+@media (max-width: 640px) {
+  .archived-page { padding: 1.25rem; }
+  .archived-row { flex-direction: column; align-items: flex-start; }
+}

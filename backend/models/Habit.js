@@ -29,6 +29,14 @@ const habitSchema = new mongoose.Schema({
     type: String,
     default: '#3b82f6'
   },
+  archived: {
+    type: Boolean,
+    default: false
+  },
+  archivedAt: {
+    type: Date,
+    default: null
+  },
   createdAt: {
     type: Date,
     default: Date.now

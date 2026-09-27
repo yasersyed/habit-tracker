@@ -87,19 +87,15 @@ function HabitDashboard() {
     }
   };
 
-  const handleDeleteHabit = async (habitId) => {
-    if (window.confirm('Are you sure you want to delete this habit? All records will be removed and earned XP will be reclaimed.')) {
-      try {
-        const response = await habitAPI.delete(habitId);
-        if (response.data.userXp) {
-          setUserXp(response.data.userXp);
-        }
-        loadHabits();
-        loadTodayRecords();
-        loadStreaks();
-      } catch (error) {
-        console.error('Error deleting habit:', error);
-      }
+  const handleArchiveHabit = async (habitId) => {
+    try {
+      await habitAPI.archive(habitId);
+      loadHabits();
+      loadTodayRecords();
+      loadStreaks();
+    } catch (error) {
+      console.error('Error archiving habit:', error);
+      alert('Error archiving habit');
     }
   };
 
@@ -186,7 +182,7 @@ function HabitDashboard() {
               isCompleted={isHabitCompleted(habit._id)}
               streak={streaks[habit._id]}
               onToggle={() => handleToggleHabit(habit._id)}
-              onDelete={() => handleDeleteHabit(habit._id)}
+              onArchive={() => handleArchiveHabit(habit._id)}
               onEdit={() => setEditingHabit(habit)}
             />
           ))

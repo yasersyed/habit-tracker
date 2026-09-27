@@ -166,6 +166,16 @@ describe('Habit Model', () => {
     expect(habit.description).toBeUndefined();
   });
 
+  test('should default to not archived', async () => {
+    const habit = await Habit.create({
+      userId: testUser._id,
+      name: 'Test Habit'
+    });
+
+    expect(habit.archived).toBe(false);
+    expect(habit.archivedAt).toBeNull();
+  });
+
   test('should populate userId reference', async () => {
     const habit = await Habit.create({
       userId: testUser._id,

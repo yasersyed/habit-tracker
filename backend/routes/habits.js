@@ -44,18 +44,27 @@ const habitBodyValidators = [
   runValidation
 ];
 
-const listQueryValidators = [...paginationQueryValidators, runValidation];
+const listQueryValidators = [
+  query('archived').optional().isIn(['true', 'false']).withMessage('Invalid archived value'),
+  ...paginationQueryValidators,
+  runValidation
+];
 
 // Get all habits for authenticated user
 router.get('/', listQueryValidators, async (req, res) => {
   try {
-    const filter = { userId: req.user._id };
+    const showArchived = req.query.archived === 'true';
+    const filter = {
+      userId: req.user._id,
+      archived: showArchived ? true : { $ne: true }
+    };
     const { page, limit, skip } = parsePaginationQuery(req);
+    const sort = showArchived ? { archivedAt: -1, _id: -1 } : { createdAt: -1, _id: -1 };
 
     const [total, habits] = await Promise.all([
       Habit.countDocuments(filter),
       Habit.find(filter)
-        .sort({ createdAt: -1, _id: -1 })
+        .sort(sort)
         .skip(skip)
         .limit(limit)
     ]);
@@ -176,6 +185,49 @@ router.put('/:id', idParam, habitBodyValidators, async (req, res) => {
     if (req.body.frequency) habit.frequency = req.body.frequency;
     if (req.body.xpReward !== undefined) habit.xpReward = req.body.xpReward;
     if (req.body.color) habit.color = req.body.color;
+
+    const updatedHabit = await habit.save();
+    res.json(updatedHabit);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// Archive a habit (verify ownership) — hides it from the default list but
+// keeps all its records/XP/history intact.
+router.put('/:id/archive', idParam, async (req, res) => {
+  try {
+    const habit = await Habit.findOne({
+      _id: req.params.id,
+      userId: req.user._id
+    });
+    if (!habit) {
+      return res.status(404).json({ message: 'Habit not found' });
+    }
+
+    habit.archived = true;
+    habit.archivedAt = new Date();
+
+    const updatedHabit = await habit.save();
+    res.json(updatedHabit);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// Unarchive a habit (verify ownership) — brings it back into the default list.
+router.put('/:id/unarchive', idParam, async (req, res) => {
+  try {
+    const habit = await Habit.findOne({
+      _id: req.params.id,
+      userId: req.user._id
+    });
+    if (!habit) {
+      return res.status(404).json({ message: 'Habit not found' });
+    }
+
+    habit.archived = false;
+    habit.archivedAt = null;
 
     const updatedHabit = await habit.save();
     res.json(updatedHabit);
