@@ -286,32 +286,33 @@ Update `kube/base/secrets.yaml` with production credentials before deploying. Th
 
 ### Frontend To-Do
 
-- [ ] **Habit Streaks UI** - Display current and best streak counts on each habit card
+- [x] **Habit Streaks UI** - Display current and best streak counts on each habit card
 - [x] **Completion Heatmap** - GitHub-style activity heatmap showing daily completions with summary stats (today, streak, active days, total)
-- [ ] **Calendar View** - Calendar component showing completion history for habits
-- [ ] **Statistics / Charts** - Visual progress charts (weekly/monthly completion rates, XP over time)
+- [x] **Calendar View** - Calendar component showing completion history for habits
+- [x] **Statistics / Charts** - Visual progress charts (completion rates, XP over time), now on their own `/statistics` tab
 - [ ] **Habit Categories & Tags** - Organize habits with categories/tags and filter by them
-- [ ] **Dark Mode** - Dark theme toggle using CSS variables
-- [ ] **Mobile Responsiveness** - Improve layouts for small screens (cards, forms, navigation)
+- [x] **Dark Mode** - Dark theme toggle using CSS variables
+- [x] **Mobile Responsiveness** - Improve layouts for small screens (cards, forms, navigation)
 - [ ] **Notifications / Reminders UI** - Settings page for configuring habit reminders
-- [ ] **Data Export UI** - Button to export habit data as CSV or JSON
-- [ ] **Edit Habit** - UI for editing an existing habit (name, frequency, color, difficulty)
-- [ ] **User Profile Page** - View/edit profile info and see overall stats
-- [ ] **Level-Up Animation** - Animated graphic/overlay when user reaches a new level
-- [ ] **Toast Notifications** - Add `react-hot-toast` for success/error feedback on habit actions
-- [ ] **Animations** - Add `framer-motion` for UI transitions (card entries, level-up effects)
-- [ ] **Charts Library** - Add `recharts` for statistics/charts feature
-- [ ] **Date Utilities** - Add `date-fns` for calendar view and reliable date handling
+- [x] **Data Export UI** - Button to export habit data as CSV or JSON
+- [x] **Edit Habit** - UI for editing an existing habit (name, frequency, color, difficulty)
+- [x] **User Profile Page** - View/edit profile info and see overall stats
+- [x] **Habit Archiving UI** - Archive button on habit cards; `/archived` page to unarchive or permanently delete
+- [ ] **Level-Up Animation** - Animated graphic/overlay when user reaches a new level *(a gold-star animation plays on marking a habit complete, but nothing level-up-specific yet)*
+- [ ] **Toast Notifications** - Add `react-hot-toast` for success/error feedback on habit actions *(still plain `alert()`/`confirm()` — no toast library added)*
+- [ ] **Animations** - Add `framer-motion` for UI transitions (card entries, level-up effects) *(the complete-habit star animation is a plain CSS keyframe; no `framer-motion` dependency added)*
+- [ ] **Charts Library** - Add `recharts` for statistics/charts feature *(Statistics shipped as hand-built inline SVG; no `recharts` dependency added)*
+- [ ] **Date Utilities** - Add `date-fns` for calendar view and reliable date handling *(Calendar and streak/date logic use custom utilities instead; no `date-fns` dependency added)*
 
 ### Backend To-Do
 
-- [ ] **Streak Calculation** - API logic to compute current/longest streaks per habit
-- [ ] **Statistics Endpoints** - Endpoints for aggregated stats (completion rates, XP trends)
+- [x] **Streak Calculation** - API logic to compute current/longest streaks per habit
+- [x] **Statistics Endpoints** - Endpoints for aggregated stats (completion rates, XP trends)
 - [ ] **Categories/Tags Model** - Category/tag schema and association with habits
 - [ ] **Reminder System** - Scheduled notifications (email or push) for habit reminders
-- [ ] **Data Export Endpoint** - `GET /api/export` to generate CSV/JSON of user data
-- [ ] **Rate Limiting** - Rate limiting middleware to protect API endpoints
-- [ ] **Input Validation** - express-validator or similar for stricter request validation
+- [x] **Data Export Endpoint** - `GET /api/export` to generate CSV/JSON of user data
+- [x] **Rate Limiting** - Rate limiting middleware to protect API endpoints *(applied to auth login/register; not yet extended to the rest of the API)*
+- [x] **Input Validation** - express-validator or similar for stricter request validation
 - [ ] **Password Reset** - Forgot password / reset flow with email
-- [ ] **Habit Archiving** - Soft-delete / archive habits instead of permanent deletion
-- [ ] **Pagination** - Pagination for habits and records list endpoints
+- [x] **Habit Archiving** - Soft-delete / archive habits instead of permanent deletion
+- [x] **Pagination** - Pagination for habits and records list endpoints
