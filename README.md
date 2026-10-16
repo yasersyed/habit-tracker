@@ -22,13 +22,35 @@ habit-tracker/
 
 ## Features
 
-- User authentication (signup, login, logout)
-- JWT-based session management
-- Create and manage habits with customizable colors and frequencies
-- Track habits daily
-- View habit completion status
-- Delete habits
-- Protected routes - all habit data is user-specific
+### Habit Management
+- Create, edit, and delete habits with a name, description, frequency (daily/weekly/monthly), and color
+- 15 preset habit templates with built-in difficulty tiers and XP values, or build a fully custom habit
+- Custom color picker — preset swatches or an HSV color wheel with a brightness slider
+- Archive a habit to hide it from the dashboard without losing its history; unarchive or permanently delete it from a dedicated Archived page
+
+### Tracking & Insights
+- Mark habits complete/incomplete for any day
+- Per-habit current and longest streaks, shown on each card
+- GitHub-style completion heatmap with summary stats (today, streak, active days, total)
+- Monthly calendar view — pick a habit to backfill past days, or see a read-only all-habits completion overview
+- Statistics tab with a selectable date range: KPIs, a daily-completions chart, a cumulative-XP chart, and per-habit completion-rate bars
+
+### Gamification
+- XP rewards per habit, by difficulty tier or custom value
+- Account leveling with a smoothly increasing XP curve and a level/XP progress bar
+- Star animation when you mark a habit complete
+
+### Account & Data
+- JWT-based authentication (signup, login, logout) with rate-limited login/register
+- Profile page — view stats, edit username, change password, or delete your account (cascades habits and records)
+- Export all habit and completion data as CSV or JSON
+- Dark mode, synced with your OS preference and remembered across visits
+- Responsive layouts down to phone width
+
+### Security & Architecture
+- Protected routes — all habit data is user-specific
+- Input validation on every endpoint (`express-validator`)
+- Paginated list endpoints
 
 ## Prerequisites
 
@@ -147,28 +169,47 @@ For more details, see [backend/__tests__/README.md](backend/__tests__/README.md)
 
 ## API Endpoints
 
-### Authentication
-- `POST /api/auth/register` - Register a new user
-- `POST /api/auth/login` - Login with email and password
-- `GET /api/auth/me` - Get current authenticated user
+### Authentication (`/api/auth`)
+- `POST /register` - Register a new user (rate-limited)
+- `POST /login` - Login with email and password (rate-limited)
+- `GET /me` - Get current authenticated user (protected)
 
-### Users (Protected)
-- `GET /api/users/me` - Get current user's profile
-- `PUT /api/users/me` - Update current user's profile
+### Users (Protected, `/api/users`)
+- `GET /me` - Get current user's profile
+- `PUT /me` - Update current user's profile (username)
+- `PUT /me/password` - Change password (body: {currentPassword, newPassword})
+- `DELETE /me` - Delete current user's account (cascades habits and records)
 
-### Habits (Protected)
-- `GET /api/habits?page=1&limit=20` - Get paginated habits for authenticated user
-- `GET /api/habits/:id` - Get habit by ID
-- `POST /api/habits` - Create new habit
-- `PUT /api/habits/:id` - Update habit
-- `DELETE /api/habits/:id` - Delete habit (cascades to records, reclaims XP)
+### Habits (Protected, `/api/habits`)
+- `GET /?page=1&limit=20` - Get paginated habits for authenticated user; add `?archived=true` to list archived habits instead
+- `GET /streaks?today=YYYY-MM-DD` - Get `{ current, longest }` streaks for every habit, keyed by habit id
+- `GET /:id/streak?today=YYYY-MM-DD` - Get `{ current, longest }` streak for one habit
+- `GET /:id` - Get habit by ID
+- `POST /` - Create new habit
+- `PUT /:id` - Update habit
+- `PUT /:id/archive` - Archive a habit (hides it from the default list; history is kept)
+- `PUT /:id/unarchive` - Unarchive a habit
+- `DELETE /:id` - Permanently delete habit (cascades to records, reclaims XP)
 
-### Habit Records (Protected)
-- `GET /api/records?page=1&limit=20` - Get paginated records for authenticated user
-- `GET /api/records/habit/:habitId?page=1&limit=20` - Get paginated records for a habit
-- `GET /api/records/range?startDate=&endDate=&page=1&limit=20` - Get paginated records for date range
-- `POST /api/records` - Create or update habit record
-- `DELETE /api/records/:id` - Delete habit record
+### Habit Records (Protected, `/api/records`)
+- `GET /?page=1&limit=20` - Get paginated records for authenticated user
+- `GET /habit/:habitId?page=1&limit=20&startDate=&endDate=` - Get paginated records for a habit, optionally bounded by date
+- `GET /range?startDate=&endDate=&page=1&limit=20` - Get paginated records for a date range
+- `POST /` - Create a record, or update the existing one for that habit/date (toggles `completed`, awards or deducts XP)
+- `DELETE /:id` - Delete habit record (deducts XP if it was completed)
+
+### Statistics (Protected, `/api/stats`)
+All endpoints accept an optional `?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD` (default: the last 30 days ending today, UTC).
+- `GET /summary` - KPIs for the range: `{ range, habitCount, totalCompletions, activeDays, xpEarned, completionRate }`
+- `GET /daily` - Zero-filled per-day series for trend charts: `{ range, days: [{ date, completions, xpEarned, cumulativeXp }] }`
+- `GET /habits` - Per-habit breakdown: `{ range, habits: [{ habitId, name, color, frequency, completions, expected, completionRate, xpEarned }] }`
+
+### Export (Protected, `/api/export`)
+- `GET /?format=csv|json` - Download all of the user's habits and completion history (default: `json`)
+
+### Meta
+- `GET /api/version` - App version
+- `GET /api/health` - Health check (includes version)
 
 Paginated list endpoints return standard pagination headers:
 - `X-Total-Count`: total matching documents
@@ -195,7 +236,8 @@ Authorization: Bearer <token>
 ### User
 - username (unique, min 3 characters)
 - email (unique)
-- password (hashed, min 6 characters)
+- password (hashed, min 6 characters, never returned by the API)
+- level, xp, totalXp — `totalXp` is the source of truth; `level` and `xp` (progress within the level) are always recomputed from it, so the leveling curve can change without a data migration
 - createdAt
 
 ### Habit
@@ -203,16 +245,19 @@ Authorization: Bearer <token>
 - name
 - description
 - frequency (daily/weekly/monthly)
+- xpReward
 - color
+- archived, archivedAt — soft-delete; an archived habit is hidden from the default list but keeps all of its records and earned XP
 - createdAt
 
 ### HabitRecord
 - habitId (reference to Habit)
 - userId (reference to User)
-- date
+- date (normalized to midnight UTC)
 - completed (boolean)
 - notes
 - createdAt
+- Unique compound index on (habitId, date) — one record per habit per day
 
 ## Security
 
@@ -286,32 +331,33 @@ Update `kube/base/secrets.yaml` with production credentials before deploying. Th
 
 ### Frontend To-Do
 
-- [ ] **Habit Streaks UI** - Display current and best streak counts on each habit card
+- [x] **Habit Streaks UI** - Display current and best streak counts on each habit card
 - [x] **Completion Heatmap** - GitHub-style activity heatmap showing daily completions with summary stats (today, streak, active days, total)
-- [ ] **Calendar View** - Calendar component showing completion history for habits
-- [ ] **Statistics / Charts** - Visual progress charts (weekly/monthly completion rates, XP over time)
+- [x] **Calendar View** - Calendar component showing completion history for habits
+- [x] **Statistics / Charts** - Visual progress charts (completion rates, XP over time), now on their own `/statistics` tab
 - [ ] **Habit Categories & Tags** - Organize habits with categories/tags and filter by them
-- [ ] **Dark Mode** - Dark theme toggle using CSS variables
-- [ ] **Mobile Responsiveness** - Improve layouts for small screens (cards, forms, navigation)
+- [x] **Dark Mode** - Dark theme toggle using CSS variables
+- [x] **Mobile Responsiveness** - Improve layouts for small screens (cards, forms, navigation)
 - [ ] **Notifications / Reminders UI** - Settings page for configuring habit reminders
-- [ ] **Data Export UI** - Button to export habit data as CSV or JSON
-- [ ] **Edit Habit** - UI for editing an existing habit (name, frequency, color, difficulty)
-- [ ] **User Profile Page** - View/edit profile info and see overall stats
-- [ ] **Level-Up Animation** - Animated graphic/overlay when user reaches a new level
-- [ ] **Toast Notifications** - Add `react-hot-toast` for success/error feedback on habit actions
-- [ ] **Animations** - Add `framer-motion` for UI transitions (card entries, level-up effects)
-- [ ] **Charts Library** - Add `recharts` for statistics/charts feature
-- [ ] **Date Utilities** - Add `date-fns` for calendar view and reliable date handling
+- [x] **Data Export UI** - Button to export habit data as CSV or JSON
+- [x] **Edit Habit** - UI for editing an existing habit (name, frequency, color, difficulty)
+- [x] **User Profile Page** - View/edit profile info and see overall stats
+- [x] **Habit Archiving UI** - Archive button on habit cards; `/archived` page to unarchive or permanently delete
+- [ ] **Level-Up Animation** - Animated graphic/overlay when user reaches a new level *(a gold-star animation plays on marking a habit complete, but nothing level-up-specific yet)*
+- [ ] **Toast Notifications** - Add `react-hot-toast` for success/error feedback on habit actions *(still plain `alert()`/`confirm()` — no toast library added)*
+- [ ] **Animations** - Add `framer-motion` for UI transitions (card entries, level-up effects) *(the complete-habit star animation is a plain CSS keyframe; no `framer-motion` dependency added)*
+- [ ] **Charts Library** - Add `recharts` for statistics/charts feature *(Statistics shipped as hand-built inline SVG; no `recharts` dependency added)*
+- [ ] **Date Utilities** - Add `date-fns` for calendar view and reliable date handling *(Calendar and streak/date logic use custom utilities instead; no `date-fns` dependency added)*
 
 ### Backend To-Do
 
-- [ ] **Streak Calculation** - API logic to compute current/longest streaks per habit
-- [ ] **Statistics Endpoints** - Endpoints for aggregated stats (completion rates, XP trends)
+- [x] **Streak Calculation** - API logic to compute current/longest streaks per habit
+- [x] **Statistics Endpoints** - Endpoints for aggregated stats (completion rates, XP trends)
 - [ ] **Categories/Tags Model** - Category/tag schema and association with habits
 - [ ] **Reminder System** - Scheduled notifications (email or push) for habit reminders
-- [ ] **Data Export Endpoint** - `GET /api/export` to generate CSV/JSON of user data
-- [ ] **Rate Limiting** - Rate limiting middleware to protect API endpoints
-- [ ] **Input Validation** - express-validator or similar for stricter request validation
+- [x] **Data Export Endpoint** - `GET /api/export` to generate CSV/JSON of user data
+- [x] **Rate Limiting** - Rate limiting middleware to protect API endpoints *(applied to auth login/register; not yet extended to the rest of the API)*
+- [x] **Input Validation** - express-validator or similar for stricter request validation
 - [ ] **Password Reset** - Forgot password / reset flow with email
-- [ ] **Habit Archiving** - Soft-delete / archive habits instead of permanent deletion
-- [ ] **Pagination** - Pagination for habits and records list endpoints
+- [x] **Habit Archiving** - Soft-delete / archive habits instead of permanent deletion
+- [x] **Pagination** - Pagination for habits and records list endpoints
