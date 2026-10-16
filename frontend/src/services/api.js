@@ -65,8 +65,12 @@ export const recordAPI = {
     return api.get(`/records/habit/${habitId}?${params.toString()}`);
   },
   getAll: () => api.get('/records'),
-  getByRange: (startDate, endDate) =>
-    api.get(`/records/range?startDate=${startDate}&endDate=${endDate}`),
+  getByRange: (startDate, endDate, { page, limit } = {}) => {
+    const params = new URLSearchParams({ startDate, endDate });
+    if (page) params.set('page', page);
+    params.set('limit', String(limit || 100));
+    return api.get(`/records/range?${params.toString()}`);
+  },
   create: (data) => api.post('/records', data),
   delete: (id) => api.delete(`/records/${id}`)
 };
