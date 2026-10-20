@@ -14,8 +14,12 @@ RUN npm run build
 
 FROM nginx:alpine
 
-COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
+COPY frontend/nginx.conf /etc/nginx/templates/default.conf.template
 COPY --from=build /app/frontend/dist /usr/share/nginx/html
+
+ENV NGINX_PORT=80 \
+    BACKEND_HOST=backend-service \
+    BACKEND_PORT=5000
 
 EXPOSE 80
 
