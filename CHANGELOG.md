@@ -7,12 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-20
+
 ### Added
 - Habit Archiving: archive a habit from its card (📦) to remove it from the
   dashboard without losing its history — records, earned XP, stats, and
   exports are unaffected. A new `/archived` page lists archived habits with
   options to unarchive or permanently delete them. Backend: `PUT
   /api/habits/:id/archive` and `/unarchive`, and `GET /api/habits?archived=true`.
+- Configurable Docker ports: set `FRONTEND_PORT` (host port, default 80) and
+  `BACKEND_PORT` (default 5000) in `.env`. The frontend's nginx config is now
+  rendered at startup, so the `/api` proxy follows `BACKEND_PORT` without
+  rebuilding the image.
+
+### Changed
+- Deployment docs build images with `docker buildx`, and
+  `docker-compose.hub.yml` now defaults to the `0.4.0` images.
+
+### Fixed
+- The completion heatmap showed only the 20 most recent completions across all
+  habits; it now loads every completion in its 15-week window.
 
 ## [0.3.0] - 2026-09-12
 
@@ -79,7 +93,8 @@ testing (pre-1.0 — expect changes).
   (version also included in `/api/health`), an in-app version footer, a
   `npm run bump` script, and a `npm run check:version` guard.
 
-[Unreleased]: https://github.com/yasersyed/habit-tracker/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/yasersyed/habit-tracker/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/yasersyed/habit-tracker/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/yasersyed/habit-tracker/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/yasersyed/habit-tracker/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/yasersyed/habit-tracker/releases/tag/v0.1.0
