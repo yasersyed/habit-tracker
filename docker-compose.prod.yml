@@ -5,7 +5,8 @@
 #   docker compose -f docker-compose.prod.yml up -d --build
 #
 # The frontend (nginx, port 80) serves the built SPA and proxies /api to the
-# backend, so the app is same-origin — only port 80 is exposed publicly.
+# backend, so the app is same-origin — only FRONTEND_PORT (default 80) is
+# exposed publicly.
 services:
   mongodb:
     image: mongo:7.0
@@ -31,7 +32,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
       CORS_ORIGINS: ${CORS_ORIGINS:-*}
-      PORT: "5000"
+      PORT: ${BACKEND_PORT:-5000}
     depends_on:
       - mongodb
     networks:
@@ -42,8 +43,11 @@ services:
       context: .
       dockerfile: frontend/Dockerfile
     restart: unless-stopped
+    environment:
+      # Must match the backend's PORT so nginx proxies /api to the right place.
+      BACKEND_PORT: ${BACKEND_PORT:-5000}
     ports:
-      - "80:80"
+      - "${FRONTEND_PORT:-80}:80"
     depends_on:
       - backend-service
     networks:
