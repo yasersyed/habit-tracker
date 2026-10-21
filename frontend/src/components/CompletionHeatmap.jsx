@@ -30,10 +30,11 @@ function dateKey(d) {
   return localDateString(d);
 }
 
+// Scaled against the number of habits rather than the busiest day, so the
+// first completion of a day is light and only finishing everything is darkest.
 function getIntensity(count, max) {
   if (count === 0) return 0;
-  if (max <= 1) return 4;
-  const ratio = count / max;
+  const ratio = count / Math.max(max, 1);
   if (ratio <= 0.25) return 1;
   if (ratio <= 0.5) return 2;
   if (ratio <= 0.75) return 3;
@@ -75,7 +76,7 @@ function computeStreak(countByDate) {
   return streak;
 }
 
-function CompletionHeatmap() {
+function CompletionHeatmap({ totalHabits = 0 }) {
   const [countByDate, setCountByDate] = useState({});
   const [loading, setLoading] = useState(true);
 
@@ -125,7 +126,8 @@ function CompletionHeatmap() {
   today.setHours(0, 0, 0, 0);
   const todayKey = dateKey(today);
   const todayCount = countByDate[todayKey] || 0;
-  const maxCount = Math.max(0, ...Object.values(countByDate));
+  // Past days can include since-archived habits, so never scale below the busiest day.
+  const maxCount = Math.max(totalHabits, ...Object.values(countByDate));
   const totalCompleted = Object.values(countByDate).reduce((a, b) => a + b, 0);
   const activeDays = Object.values(countByDate).filter(c => c > 0).length;
   const streak = computeStreak(countByDate);

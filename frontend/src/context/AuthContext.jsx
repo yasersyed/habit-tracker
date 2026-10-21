@@ -26,10 +26,10 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   };
 
-  const login = async (email, password) => {
+  const login = async (identifier, password) => {
     try {
       setError(null);
-      const response = await authAPI.login({ email, password });
+      const response = await authAPI.login({ identifier, password });
       localStorage.setItem('token', response.data.token);
       setUser(response.data.user);
       return { success: true };

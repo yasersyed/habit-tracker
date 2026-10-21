@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Log in with either your username or email. The backend accepts a new
+  `identifier` field on `POST /api/auth/login`; `email` still works.
+- On narrow screens the nav shows Dashboard, Calendar and Statistics, with
+  Profile and Archived behind a **More** toggle so links are no longer cut off.
+
+### Changed
+- Failed logins now show "Invalid username/email or password".
+
+### Fixed
+- Submitting the login form with an empty field now shows a warning.
+- Failed logins reloaded the page and hid the error message; the error now
+  stays visible.
+- The heatmap shaded any day with one completion at full strength; shading now
+  scales with the share of habits completed that day.
+
 ## [0.4.0] - 2026-10-20
 
 ### Added

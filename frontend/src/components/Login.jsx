@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import './Auth.css';
 
 function Login() {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -15,9 +15,21 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    // Validated here (form is noValidate) so the warning looks the same on
+    // every browser — some mobile browsers show nothing for `required`.
+    if (!identifier.trim()) {
+      setError('Please enter your username or email');
+      return;
+    }
+    if (!password) {
+      setError('Please enter your password');
+      return;
+    }
+
     setLoading(true);
 
-    const result = await login(email, password);
+    const result = await login(identifier.trim(), password);
 
     setLoading(false);
 
@@ -35,14 +47,16 @@ function Login() {
 
         {error && <div className="auth-error">{error}</div>}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           <div className="form-group">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="identifier">Username or Email</label>
             <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              id="identifier"
+              autoComplete="username"
+              autoCapitalize="none"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
               required
               disabled={loading}
             />
@@ -53,6 +67,7 @@ function Login() {
             <input
               type="password"
               id="password"
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required

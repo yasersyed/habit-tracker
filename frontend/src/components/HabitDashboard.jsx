@@ -147,7 +147,7 @@ function HabitDashboard() {
         </div>
       </div>
 
-      <CompletionHeatmap key={records.length} />
+      <CompletionHeatmap key={records.length} totalHabits={habits.length} />
 
       <div className="dashboard-header">
         <h2>Welcome, {user?.username}!</h2>
