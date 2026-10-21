@@ -74,6 +74,23 @@ describe('Habit Streak Routes', () => {
       expect(response.body).toEqual({ current: 2, longest: 5 });
     });
 
+    test('counts weekly habits in consecutive weeks', async () => {
+      const weekly = await Habit.create({ userId: testUser._id, name: 'Long run', frequency: 'weekly' });
+      await HabitRecord.create([
+        recordOn(weekly._id, testUser._id, '2024-01-02'),
+        recordOn(weekly._id, testUser._id, '2024-01-10'),
+        recordOn(weekly._id, testUser._id, '2024-01-15')
+      ]);
+
+      const response = await request(app)
+        .get(`/api/habits/${weekly._id}/streak`)
+        .query({ today: '2024-01-17' })
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ current: 3, longest: 3 });
+    });
+
     test('an unlogged today does not break the current streak', async () => {
       await HabitRecord.create([
         recordOn(habit._id, testUser._id, '2024-01-13'),

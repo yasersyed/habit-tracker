@@ -1,12 +1,20 @@
 import React, { useState } from 'react';
 import './HabitCard.css';
 
+// Streaks and completion are counted per period, so labels follow the habit's frequency.
+const PERIOD_LABELS = {
+  daily: { unit: 'day', current: 'today', done: '✓ Completed Today' },
+  weekly: { unit: 'week', current: 'this week', done: '✓ Completed This Week' },
+  monthly: { unit: 'month', current: 'this month', done: '✓ Completed This Month' }
+};
+
 function HabitCard({ habit, isCompleted, streak, onToggle, onArchive, onEdit }) {
   const [showCurrent, setShowCurrent] = useState(false);
   const [celebrate, setCelebrate] = useState(false);
   const { current = 0, longest = 0 } = streak || {};
 
-  const dayLabel = (n) => (n === 1 ? 'day' : 'days');
+  const period = PERIOD_LABELS[habit.frequency] || PERIOD_LABELS.daily;
+  const unitLabel = (n) => (n === 1 ? period.unit : `${period.unit}s`);
 
   // Celebrate only the completing action, not un-marking.
   const handleToggle = () => {
@@ -40,7 +48,7 @@ function HabitCard({ habit, isCompleted, streak, onToggle, onArchive, onEdit }) 
           <span className="streak-icon" aria-hidden="true">🏆</span>
           <span className="streak-best-label">Best streak</span>
           <span className="streak-best-value">
-            {longest} {dayLabel(longest)}
+            {longest} {unitLabel(longest)}
           </span>
         </div>
 
@@ -58,11 +66,11 @@ function HabitCard({ habit, isCompleted, streak, onToggle, onArchive, onEdit }) 
             {current > 0 ? (
               <span>
                 <span className="streak-icon" aria-hidden="true">🔥</span>
-                On a {current}-{dayLabel(current)} streak right now
+                On a {current}-{period.unit} streak right now
               </span>
             ) : (
               <span className="streak-current-empty">
-                No active streak — complete it today to start one.
+                No active streak — complete it {period.current} to start one.
               </span>
             )}
           </div>
@@ -74,7 +82,7 @@ function HabitCard({ habit, isCompleted, streak, onToggle, onArchive, onEdit }) 
           className={`track-btn ${isCompleted ? 'completed' : ''}`}
           onClick={handleToggle}
         >
-          {isCompleted ? '✓ Completed Today' : 'Mark as Complete'}
+          {isCompleted ? period.done : 'Mark as Complete'}
         </button>
         {celebrate && (
           <span
