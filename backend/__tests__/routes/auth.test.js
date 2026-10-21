@@ -190,7 +190,7 @@ describe('Auth Routes', () => {
         });
 
       expect(response.status).toBe(401);
-      expect(response.body.message).toBe('No account found with that username or email');
+      expect(response.body.message).toBe('Invalid username/email or password');
     });
 
     test('should return 401 for wrong password', async () => {
@@ -208,7 +208,7 @@ describe('Auth Routes', () => {
         });
 
       expect(response.status).toBe(401);
-      expect(response.body.message).toBe('Incorrect password');
+      expect(response.body.message).toBe('Invalid username/email or password');
     });
 
     test('should login with username as identifier', async () => {

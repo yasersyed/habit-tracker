@@ -101,16 +101,18 @@ router.post('/login', loginLimiter, loginValidators, async (req, res) => {
       $or: [{ email: identifier.toLowerCase() }, { username: identifier }]
     }).select('+password');
 
-    // Registration already reveals whether an email/username exists, so a
-    // specific message here costs no extra privacy and helps users fix typos.
+    // Same message for both cases so the login form can't be used to probe
+    // which accounts exist.
+    const invalidMessage = 'Invalid username/email or password';
+
     if (!user) {
-      return res.status(401).json({ message: 'No account found with that username or email' });
+      return res.status(401).json({ message: invalidMessage });
     }
 
     const isMatch = await user.comparePassword(password);
 
     if (!isMatch) {
-      return res.status(401).json({ message: 'Incorrect password' });
+      return res.status(401).json({ message: invalidMessage });
     }
 
     const token = generateToken(user._id);
