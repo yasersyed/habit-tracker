@@ -41,6 +41,7 @@ const registerValidators = [
 ];
 
 const loginValidators = [
+  body('identifier').optional().isString().withMessage('Invalid username or email'),
   body('email').optional().isString().withMessage('Invalid email'),
   body('password').optional().isString().withMessage('Invalid password'),
   runValidation
@@ -87,22 +88,29 @@ router.post('/register', registerLimiter, registerValidators, async (req, res) =
 // POST /api/auth/login
 router.post('/login', loginLimiter, loginValidators, async (req, res) => {
   try {
-    const { email, password } = req.body;
+    // `email` is still accepted so older clients keep working.
+    const identifier = (req.body.identifier ?? req.body.email ?? '').trim();
+    const { password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Please provide email and password' });
+    if (!identifier || !password) {
+      return res.status(400).json({ message: 'Please provide username or email and password' });
     }
 
-    const user = await User.findOne({ email }).select('+password');
+    // Emails are stored lowercased; usernames are case-sensitive.
+    const user = await User.findOne({
+      $or: [{ email: identifier.toLowerCase() }, { username: identifier }]
+    }).select('+password');
 
+    // Registration already reveals whether an email/username exists, so a
+    // specific message here costs no extra privacy and helps users fix typos.
     if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(401).json({ message: 'No account found with that username or email' });
     }
 
     const isMatch = await user.comparePassword(password);
 
     if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(401).json({ message: 'Incorrect password' });
     }
 
     const token = generateToken(user._id);

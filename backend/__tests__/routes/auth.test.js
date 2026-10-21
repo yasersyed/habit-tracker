@@ -167,7 +167,7 @@ describe('Auth Routes', () => {
         });
 
       expect(response.status).toBe(400);
-      expect(response.body.message).toBe('Please provide email and password');
+      expect(response.body.message).toBe('Please provide username or email and password');
     });
 
     test('should return 400 for missing password', async () => {
@@ -178,7 +178,7 @@ describe('Auth Routes', () => {
         });
 
       expect(response.status).toBe(400);
-      expect(response.body.message).toBe('Please provide email and password');
+      expect(response.body.message).toBe('Please provide username or email and password');
     });
 
     test('should return 401 for non-existent email', async () => {
@@ -190,7 +190,7 @@ describe('Auth Routes', () => {
         });
 
       expect(response.status).toBe(401);
-      expect(response.body.message).toBe('Invalid credentials');
+      expect(response.body.message).toBe('No account found with that username or email');
     });
 
     test('should return 401 for wrong password', async () => {
@@ -208,7 +208,37 @@ describe('Auth Routes', () => {
         });
 
       expect(response.status).toBe(401);
-      expect(response.body.message).toBe('Invalid credentials');
+      expect(response.body.message).toBe('Incorrect password');
+    });
+
+    test('should login with username as identifier', async () => {
+      await User.create({
+        username: 'testuser',
+        email: 'test@example.com',
+        password: 'password123'
+      });
+
+      const response = await request(app)
+        .post('/api/auth/login')
+        .send({ identifier: 'testuser', password: 'password123' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.token).toBeDefined();
+    });
+
+    test('should login with email as identifier, ignoring case', async () => {
+      await User.create({
+        username: 'testuser',
+        email: 'test@example.com',
+        password: 'password123'
+      });
+
+      const response = await request(app)
+        .post('/api/auth/login')
+        .send({ identifier: 'Test@Example.com', password: 'password123' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.token).toBeDefined();
     });
 
     test('should reject NoSQL injection in email field', async () => {

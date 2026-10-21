@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Routes, Route, Navigate, NavLink } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { useTheme } from './context/ThemeContext';
@@ -15,9 +15,20 @@ import './App.css';
 // Injected at build time by Vite (see vite.config.js); guarded for tests.
 const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'dev';
 
+const NAV_LINKS = [
+  { to: '/', label: 'Dashboard', end: true },
+  { to: '/calendar', label: 'Calendar' },
+  { to: '/statistics', label: 'Statistics' },
+  { to: '/profile', label: 'Profile' },
+  { to: '/archived', label: 'Archived' }
+];
+// Links past this index collapse behind "More" on narrow screens.
+const PRIMARY_NAV_COUNT = 3;
+
 function App() {
   const { user, logout, loading } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const [navExpanded, setNavExpanded] = useState(false);
 
   if (loading) {
     return (
@@ -33,12 +44,27 @@ function App() {
         <h1>Habit Tracker</h1>
         <div className="header-actions">
           {user && (
-            <nav className="app-nav">
-              <NavLink to="/" end className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Dashboard</NavLink>
-              <NavLink to="/calendar" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Calendar</NavLink>
-              <NavLink to="/statistics" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Statistics</NavLink>
-              <NavLink to="/profile" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Profile</NavLink>
-              <NavLink to="/archived" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Archived</NavLink>
+            <nav className={`app-nav${navExpanded ? ' expanded' : ''}`}>
+              {NAV_LINKS.map(({ to, label, end }, i) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  end={end}
+                  onClick={() => setNavExpanded(false)}
+                  className={({ isActive }) =>
+                    `nav-link${isActive ? ' active' : ''}${i >= PRIMARY_NAV_COUNT ? ' nav-extra' : ''}`}
+                >
+                  {label}
+                </NavLink>
+              ))}
+              <button
+                type="button"
+                className="nav-more"
+                aria-expanded={navExpanded}
+                onClick={() => setNavExpanded(!navExpanded)}
+              >
+                {navExpanded ? 'Less' : 'More'}
+              </button>
             </nav>
           )}
           <button
