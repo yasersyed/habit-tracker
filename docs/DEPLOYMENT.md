@@ -104,8 +104,10 @@ steps 2–5 above.
 
 ## Building and pushing images
 
-To deploy with `docker-compose.hub.yml` (pull-only, no build on the server),
-build and push the two images to a registry first, from the repo root:
+Tagged releases push both images to Docker Hub automatically (see
+[RELEASING.md](../RELEASING.md)). To build them yourself instead, e.g. for a
+different registry, push them from the repo root before deploying with
+`docker-compose.hub.yml` (pull-only, no build on the server):
 
 ```bash
 export REGISTRY="<your-dockerhub-username>"   # or ghcr.io/<github-username>
