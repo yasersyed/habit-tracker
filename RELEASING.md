@@ -1,7 +1,8 @@
 # Releasing
 
 This project uses [Semantic Versioning](https://semver.org/) with a single
-version shared across all packages. Releases are cut manually.
+version shared across all packages. Releases are prepared by hand and
+published by GitHub Actions when a tag is pushed.
 
 ## Versioning model
 - **Source of truth:** the `version` field in the root `package.json`.
@@ -40,9 +41,23 @@ Choose the bump per SemVer:
    git tag -a vX.Y.Z -m "vX.Y.Z"
    git push origin vX.Y.Z
    ```
-   Then create a GitHub Release from that tag, pasting the changelog section as
-   the notes. (A tag is the canonical release marker; the GitHub Release is
-   optional but recommended.)
+   Pushing the tag runs the **Release** workflow
+   (`.github/workflows/release.yml`), which:
+   - fails if the tag doesn't match the `package.json` versions,
+   - builds and pushes `habit-tracker-backend` and `habit-tracker-frontend`
+     to Docker Hub as `X.Y.Z` and `latest` (amd64 and arm64),
+   - creates the GitHub Release, using that version's `CHANGELOG.md` section
+     as the notes.
+
+   Follow it under the repo's **Actions** tab. If it fails partway (for
+   example a Docker Hub outage), re-run it from **Actions → Release → Run
+   workflow** with the tag; an existing GitHub Release is left as is.
+
+### One-time setup
+Add these repository secrets (**Settings → Secrets and variables → Actions**):
+- `DOCKERHUB_USERNAME`: the Docker Hub account the images are pushed under.
+- `DOCKERHUB_TOKEN`: a Docker Hub personal access token with read/write
+  access (**Docker Hub → Account settings → Personal access tokens**).
 
 ## Verifying
 ```bash

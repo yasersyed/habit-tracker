@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Pushing a `vX.Y.Z` tag now publishes the release automatically: a GitHub
+  Actions workflow checks the version, pushes multi-arch (amd64/arm64) Docker
+  images to Docker Hub, and creates the GitHub Release from `CHANGELOG.md`.
+
 ## [0.5.0] - 2026-10-22
 
 ### Added
