@@ -93,19 +93,7 @@ function CompletionHeatmap({ totalHabits = 0 }) {
       endOfGrid.setDate(endOfGrid.getDate() + 1);
       const endDate = dateKey(endOfGrid);
 
-      // The window can span many habits × 105 days, which can exceed a single
-      // page — walk every page the backend reports rather than assuming one
-      // request covers it (that silently truncated to the 20 most recent
-      // completions across all habits before this fix).
-      const allRecords = [];
-      let page = 1;
-      let totalPages = 1;
-      do {
-        const response = await recordAPI.getByRange(startDate, endDate, { page, limit: 100 });
-        allRecords.push(...response.data);
-        totalPages = Number(response.headers['x-total-pages']) || 1;
-        page++;
-      } while (page <= totalPages);
+      const allRecords = await recordAPI.getAllInRange(startDate, endDate);
 
       const counts = {};
       for (const record of allRecords) {

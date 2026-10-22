@@ -14,9 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `identifier` field on `POST /api/auth/login`; `email` still works.
 - On narrow screens the nav shows Dashboard, Calendar and Statistics, with
   Profile and Archived behind a **More** toggle so links are no longer cut off.
+- You're logged out automatically after 15 minutes without activity. Activity
+  in any open tab counts.
 
 ### Changed
 - Failed logins now show "Invalid username/email or password".
+- Completed habits move to the bottom of the dashboard.
 
 ### Fixed
 - Submitting the login form with an empty field now shows a warning.
@@ -24,6 +27,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   stays visible.
 - The heatmap shaded any day with one completion at full strength; shading now
   scales with the share of habits completed that day.
+- Weekly and monthly habits only showed as completed on the day they were
+  logged, and their streaks counted days. They now stay completed for the whole
+  week (Sunday–Saturday) or month, and streaks count consecutive weeks or months.
 
 ## [0.4.0] - 2026-10-20
 

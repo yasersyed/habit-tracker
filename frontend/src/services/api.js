@@ -73,6 +73,20 @@ export const recordAPI = {
     params.set('limit', String(limit || 100));
     return api.get(`/records/range?${params.toString()}`);
   },
+  // Long ranges can span several pages; walk all of them so callers don't
+  // silently see a truncated history.
+  getAllInRange: async (startDate, endDate) => {
+    const all = [];
+    let page = 1;
+    let totalPages = 1;
+    do {
+      const response = await recordAPI.getByRange(startDate, endDate, { page, limit: 100 });
+      all.push(...response.data);
+      totalPages = Number(response.headers['x-total-pages']) || 1;
+      page++;
+    } while (page <= totalPages);
+    return all;
+  },
   create: (data) => api.post('/records', data),
   delete: (id) => api.delete(`/records/${id}`)
 };

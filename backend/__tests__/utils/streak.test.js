@@ -1,6 +1,7 @@
 import { describe, test, expect } from '@jest/globals';
 import {
   toUtcDayNumber,
+  toPeriodNumber,
   streaksFromDayNumbers,
   computeStreaks
 } from '../../../shared/streak.js';
@@ -57,6 +58,45 @@ describe('Streak Utilities', () => {
     test('collapses duplicate days and tolerates unsorted input', () => {
       const days = ['2024-01-15', '2024-01-15', '2024-01-13', '2024-01-14'].map(toUtcDayNumber);
       expect(streaksFromDayNumbers(days, today)).toEqual({ current: 3, longest: 3 });
+    });
+  });
+
+  describe('toPeriodNumber', () => {
+    test('weeks run Sunday to Saturday', () => {
+      const sat = toPeriodNumber(toUtcDayNumber('2024-01-13'), 'weekly');
+      const sun = toPeriodNumber(toUtcDayNumber('2024-01-14'), 'weekly');
+      const nextSat = toPeriodNumber(toUtcDayNumber('2024-01-20'), 'weekly');
+      expect(sun - sat).toBe(1);
+      expect(nextSat).toBe(sun);
+    });
+
+    test('consecutive months differ by 1, including across years', () => {
+      const dec = toPeriodNumber(toUtcDayNumber('2023-12-31'), 'monthly');
+      const jan = toPeriodNumber(toUtcDayNumber('2024-01-01'), 'monthly');
+      expect(jan - dec).toBe(1);
+    });
+  });
+
+  describe('streaksFromDayNumbers with frequency', () => {
+    test('weekly streak counts consecutive weeks, not days', () => {
+      // Tue Jan 2, Wed Jan 10, Mon Jan 15 — one completion in each of three weeks.
+      const days = ['2024-01-02', '2024-01-10', '2024-01-15'].map(toUtcDayNumber);
+      expect(streaksFromDayNumbers(days, toUtcDayNumber('2024-01-17'), 'weekly'))
+        .toEqual({ current: 3, longest: 3 });
+    });
+
+    test('weekly streak survives an unlogged current week but not a skipped one', () => {
+      const days = ['2024-01-02', '2024-01-10'].map(toUtcDayNumber);
+      expect(streaksFromDayNumbers(days, toUtcDayNumber('2024-01-15'), 'weekly'))
+        .toEqual({ current: 2, longest: 2 });
+      expect(streaksFromDayNumbers(days, toUtcDayNumber('2024-01-22'), 'weekly'))
+        .toEqual({ current: 0, longest: 2 });
+    });
+
+    test('monthly streak counts consecutive months', () => {
+      const days = ['2023-11-05', '2023-12-20', '2024-01-03'].map(toUtcDayNumber);
+      expect(streaksFromDayNumbers(days, toUtcDayNumber('2024-02-10'), 'monthly'))
+        .toEqual({ current: 3, longest: 3 });
     });
   });
 

@@ -83,7 +83,7 @@ router.get('/streaks', todayQueryValidator, async (req, res) => {
     const todayDayNumber = resolveTodayDayNumber(req);
 
     const [habits, records] = await Promise.all([
-      Habit.find({ userId: req.user._id }).select('_id'),
+      Habit.find({ userId: req.user._id }).select('_id frequency'),
       HabitRecord.find({ userId: req.user._id, completed: true }).select('habitId date')
     ]);
 
@@ -99,7 +99,7 @@ router.get('/streaks', todayQueryValidator, async (req, res) => {
     const streaks = {};
     for (const habit of habits) {
       const key = habit._id.toString();
-      streaks[key] = streaksFromDayNumbers(daysByHabit.get(key) || [], todayDayNumber);
+      streaks[key] = streaksFromDayNumbers(daysByHabit.get(key) || [], todayDayNumber, habit.frequency);
     }
 
     res.json(streaks);
@@ -126,7 +126,7 @@ router.get('/:id/streak', idParam, todayQueryValidator, async (req, res) => {
     }).select('date');
 
     const dayNumbers = records.map((r) => toUtcDayNumber(r.date));
-    const streak = streaksFromDayNumbers(dayNumbers, resolveTodayDayNumber(req));
+    const streak = streaksFromDayNumbers(dayNumbers, resolveTodayDayNumber(req), habit.frequency);
 
     res.json(streak);
   } catch (error) {

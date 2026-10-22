@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { localDateString, localTomorrowString, utcDateString } from './date.js';
+import { localDateString, localTomorrowString, utcDateString, localCurrentPeriodStart } from './date.js';
 
 describe('localDateString', () => {
   test('should format date as YYYY-MM-DD in local timezone', () => {
@@ -86,5 +86,17 @@ describe('localTomorrowString', () => {
     tomorrow.setDate(tomorrow.getDate() + 1);
     const expected = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
     expect(localTomorrowString()).toBe(expected);
+  });
+});
+
+describe('localCurrentPeriodStart', () => {
+  test('returns the month start when the week began in the same month', () => {
+    // Wed Jan 17, 2024: week starts Sun Jan 14, month starts Jan 1.
+    expect(localCurrentPeriodStart(new Date(2024, 0, 17))).toBe('2024-01-01');
+  });
+
+  test('returns the week start when the week began in the previous month', () => {
+    // Fri Mar 1, 2024: week started Sun Feb 25.
+    expect(localCurrentPeriodStart(new Date(2024, 2, 1))).toBe('2024-02-25');
   });
 });
