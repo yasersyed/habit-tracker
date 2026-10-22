@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-22
+
 ### Added
 - Log in with either your username or email. The backend accepts a new
   `identifier` field on `POST /api/auth/login`; `email` still works.
@@ -115,7 +117,8 @@ testing (pre-1.0 — expect changes).
   (version also included in `/api/health`), an in-app version footer, a
   `npm run bump` script, and a `npm run check:version` guard.
 
-[Unreleased]: https://github.com/yasersyed/habit-tracker/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/yasersyed/habit-tracker/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/yasersyed/habit-tracker/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/yasersyed/habit-tracker/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/yasersyed/habit-tracker/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/yasersyed/habit-tracker/compare/v0.1.0...v0.2.0
