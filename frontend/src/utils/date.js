@@ -32,3 +32,14 @@ export function localTomorrowString(d = new Date()) {
   tomorrow.setDate(tomorrow.getDate() + 1);
   return localDateString(tomorrow);
 }
+
+/**
+ * Return the earliest of this week's Sunday and this month's 1st, as a local
+ * date string — enough history to tell whether any habit, whatever its
+ * frequency, is done for its current period.
+ */
+export function localCurrentPeriodStart(d = new Date()) {
+  const weekStart = new Date(d.getFullYear(), d.getMonth(), d.getDate() - d.getDay());
+  const monthStart = new Date(d.getFullYear(), d.getMonth(), 1);
+  return localDateString(weekStart < monthStart ? weekStart : monthStart);
+}

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { habitAPI, recordAPI, userAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { localDateString, localTomorrowString } from '../utils/date';
+import { localDateString, localTomorrowString, localCurrentPeriodStart } from '../utils/date';
 import { xpForLevel } from '../../../shared/xp.js';
+import { toUtcDayNumber, toPeriodNumber } from '../../../shared/streak.js';
 import HabitForm from './HabitForm';
 import HabitCard from './HabitCard';
 import CompletionHeatmap from './CompletionHeatmap';
@@ -19,7 +20,7 @@ function HabitDashboard() {
 
   useEffect(() => {
     loadHabits();
-    loadTodayRecords();
+    loadPeriodRecords();
     loadStreaks();
     loadUserXp();
   }, []);
@@ -54,12 +55,11 @@ function HabitDashboard() {
     }
   };
 
-  const loadTodayRecords = async () => {
+  // Weekly/monthly habits count as done for their whole period, so load
+  // records back to the start of the current week or month, not just today.
+  const loadPeriodRecords = async () => {
     try {
-      const today = localDateString();
-      const tomorrow = localTomorrowString();
-      const response = await recordAPI.getByRange(today, tomorrow);
-      setRecords(response.data);
+      setRecords(await recordAPI.getAllInRange(localCurrentPeriodStart(), localTomorrowString()));
     } catch (error) {
       console.error('Error loading records:', error);
     }
@@ -91,7 +91,7 @@ function HabitDashboard() {
     try {
       await habitAPI.archive(habitId);
       loadHabits();
-      loadTodayRecords();
+      loadPeriodRecords();
       loadStreaks();
     } catch (error) {
       console.error('Error archiving habit:', error);
@@ -99,10 +99,21 @@ function HabitDashboard() {
     }
   };
 
+  // The record that completes this habit for its current day/week/month, if any.
+  const findPeriodRecord = (habitId) => {
+    const habit = habits.find(h => h._id === habitId);
+    const frequency = habit?.frequency;
+    const currentPeriod = toPeriodNumber(toUtcDayNumber(localDateString()), frequency);
+    return records.find(r =>
+      r.habitId?._id === habitId &&
+      toPeriodNumber(toUtcDayNumber(r.date), frequency) === currentPeriod
+    );
+  };
+
   const handleToggleHabit = async (habitId) => {
     try {
       const today = localDateString();
-      const existingRecord = records.find(r => r.habitId._id === habitId);
+      const existingRecord = findPeriodRecord(habitId);
 
       let response;
       if (existingRecord) {
@@ -119,16 +130,20 @@ function HabitDashboard() {
         setUserXp(response.data.userXp);
       }
 
-      loadTodayRecords();
+      loadPeriodRecords();
       loadStreaks();
     } catch (error) {
       console.error('Error toggling habit:', error);
     }
   };
 
-  const isHabitCompleted = (habitId) => {
-    return records.some(r => r.habitId._id === habitId);
-  };
+  const isHabitCompleted = (habitId) => !!findPeriodRecord(habitId);
+
+  // Completed habits sink to the bottom so what's left to do stays on top;
+  // the sort is stable, so each group keeps its existing order.
+  const sortedHabits = [...habits].sort(
+    (a, b) => isHabitCompleted(a._id) - isHabitCompleted(b._id)
+  );
 
   const xpToNext = xpForLevel(userXp.level);
   const xpPercent = xpToNext > 0
@@ -175,7 +190,7 @@ function HabitDashboard() {
         {habits.length === 0 ? (
           <p className="no-habits">No habits yet. Create your first habit to get started!</p>
         ) : (
-          habits.map(habit => (
+          sortedHabits.map(habit => (
             <HabitCard
               key={habit._id}
               habit={habit}

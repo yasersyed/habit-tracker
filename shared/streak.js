@@ -17,24 +17,49 @@ export function toUtcDayNumber(date) {
 }
 
 /**
- * Compute the current and longest daily streaks from a list of day numbers.
+ * Map a day number to the period it falls in for a habit's frequency, so
+ * consecutive weeks/months differ by exactly 1 just like consecutive days.
+ * Weeks start on Sunday to line up with the heatmap's columns.
  *
- * A streak is a run of consecutive calendar days. The "current" streak counts
- * back from today (or yesterday, if today is not present, so an unlogged today
- * does not read as a broken streak). The "longest" streak is the best run
- * anywhere in the history.
+ * @param {number} dayNumber
+ * @param {'daily'|'weekly'|'monthly'} [frequency='daily']
+ * @returns {number}
+ */
+export function toPeriodNumber(dayNumber, frequency = 'daily') {
+  if (frequency === 'weekly') {
+    // Day 0 (1970-01-01) was a Thursday; +4 shifts week boundaries to Sunday.
+    return Math.floor((dayNumber + 4) / 7);
+  }
+  if (frequency === 'monthly') {
+    const d = new Date(dayNumber * MS_PER_DAY);
+    return d.getUTCFullYear() * 12 + d.getUTCMonth();
+  }
+  return dayNumber;
+}
+
+/**
+ * Compute the current and longest streaks from a list of day numbers.
+ *
+ * A streak is a run of consecutive periods (days, weeks or months, per
+ * `frequency`). The "current" streak counts back from the current period (or
+ * the previous one, if the current period is not done yet, so an unlogged
+ * period in progress does not read as a broken streak). The "longest" streak
+ * is the best run anywhere in the history.
  *
  * @param {number[]} dayNumbers - day numbers of completed days (duplicates ok).
  * @param {number} todayDayNumber - the day number to treat as "today".
+ * @param {'daily'|'weekly'|'monthly'} [frequency='daily']
  * @returns {{ current: number, longest: number }}
  */
-export function streaksFromDayNumbers(dayNumbers, todayDayNumber) {
-  const unique = [...new Set(dayNumbers)].sort((a, b) => a - b);
+export function streaksFromDayNumbers(dayNumbers, todayDayNumber, frequency = 'daily') {
+  const unique = [...new Set(dayNumbers.map((d) => toPeriodNumber(d, frequency)))]
+    .sort((a, b) => a - b);
+  const todayPeriod = toPeriodNumber(todayDayNumber, frequency);
   if (unique.length === 0) {
     return { current: 0, longest: 0 };
   }
 
-  // Longest run of consecutive days anywhere in history.
+  // Longest run of consecutive periods anywhere in history.
   let longest = 1;
   let run = 1;
   for (let i = 1; i < unique.length; i++) {
@@ -42,9 +67,9 @@ export function streaksFromDayNumbers(dayNumbers, todayDayNumber) {
     if (run > longest) longest = run;
   }
 
-  // Current streak counts back from today (or yesterday if today is unlogged).
+  // Current streak counts back from this period (or the last, if this one is unlogged).
   const completed = new Set(unique);
-  let cursor = todayDayNumber;
+  let cursor = todayPeriod;
   if (!completed.has(cursor)) {
     cursor -= 1;
   }
@@ -62,9 +87,10 @@ export function streaksFromDayNumbers(dayNumbers, todayDayNumber) {
  *
  * @param {Array<Date|string|number>} dates - completed-day dates.
  * @param {Date|string|number} [today] - reference "today"; defaults to now.
+ * @param {'daily'|'weekly'|'monthly'} [frequency='daily']
  * @returns {{ current: number, longest: number }}
  */
-export function computeStreaks(dates, today = new Date()) {
+export function computeStreaks(dates, today = new Date(), frequency = 'daily') {
   const dayNumbers = dates.map(toUtcDayNumber);
-  return streaksFromDayNumbers(dayNumbers, toUtcDayNumber(today));
+  return streaksFromDayNumbers(dayNumbers, toUtcDayNumber(today), frequency);
 }

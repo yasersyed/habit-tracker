@@ -327,6 +327,7 @@ Update `kube/base/secrets.yaml` with production credentials before deploying. Th
 - [ ] **No React error boundary** — Unhandled errors white-screen the app
 - [x] **No production Docker setup** — No Dockerfiles for backend/frontend, no nginx config
 - [ ] **No structured logging** — Only `console.log/error`
+- [ ] **Automated releases** — GitHub Actions workflow on `v*` tags: verify the tag matches `package.json`, create the GitHub Release from `CHANGELOG.md`, and push multi-arch Docker images to Docker Hub (needs `DOCKERHUB_USERNAME`/`DOCKERHUB_TOKEN` secrets)
 - [x] **Pagination for list endpoints** — Prevents degradation with large datasets
 
 ### Frontend To-Do
